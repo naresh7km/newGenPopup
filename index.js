@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Replace with your domain
-const ALLOWED_ORIGIN = "https://amicisrestaurant.food";
+const ALLOWED_ORIGIN = "https://sage-horse-b7caad.netlify.app";
 
 app.use(
   cors({
