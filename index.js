@@ -8,7 +8,7 @@ import fetch from "node-fetch";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const ALLOWED_ORIGIN = "https://amicisrestaurant.food";
+const ALLOWED_ORIGIN = "https://sage-horse-b7caad.netlify.app";
 
 // Helper to resolve relative paths (ESM compatible)
 const __filename = fileURLToPath(import.meta.url);
