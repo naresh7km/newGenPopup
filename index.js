@@ -31,25 +31,25 @@ const assets = [
   //   audioUrl: "https://audio.jukehost.co.uk/luhILbTa2rgzE7BEoQOc0Q9fYW2JdKXR",
   // },
   // 7191
-  {
-    htmlFile: "asset2.html",
-    audioUrl: "https://audio.jukehost.co.uk/Fo7XvNtE52iSkvc6Xy5SW3pNDqGOXrt4",
-  },
+  // {
+  //   htmlFile: "asset2.html",
+  //   audioUrl: "https://audio.jukehost.co.uk/Fo7XvNtE52iSkvc6Xy5SW3pNDqGOXrt4",
+  // },
   // 7199
-  {
-    htmlFile: "asset3.html",
-    audioUrl: "https://audio.jukehost.co.uk/aCBQpNIhnrfGU20C21KXmyY5QTjq5D4I",
-  },
+  // {
+  //   htmlFile: "asset3.html",
+  //   audioUrl: "https://audio.jukehost.co.uk/aCBQpNIhnrfGU20C21KXmyY5QTjq5D4I",
+  // },
   // 7193
-  {
-    htmlFile: "asset4.html",
-    audioUrl: "https://audio.jukehost.co.uk/WuM1hVmE3nsuOOu3LvdtEvUQODa8ndH8",
-  },
+  // {
+  //   htmlFile: "asset4.html",
+  //   audioUrl: "https://audio.jukehost.co.uk/WuM1hVmE3nsuOOu3LvdtEvUQODa8ndH8",
+  // },
   // 7194
-  {
-    htmlFile: "asset5.html",
-    audioUrl: "https://audio.jukehost.co.uk/t1C9SlZQ6sQFZ9h6cuuIVvXxgdOPbzDD",
-  },
+  // {
+  //   htmlFile: "asset5.html",
+  //   audioUrl: "https://audio.jukehost.co.uk/t1C9SlZQ6sQFZ9h6cuuIVvXxgdOPbzDD",
+  // },
 ];
 
 let currentAssetIndex = 0; // Global index for round-robin asset selection
