@@ -86,6 +86,7 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
     `;
     
     res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+    console.log("Code sent");
     return res.json({ code });
   } catch (err) {
     console.error("Error in frontend-loader:", err);
