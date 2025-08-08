@@ -96,6 +96,8 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
     return res.status(403).send("FAILED: gclid missing or too short");
   }
 
+  console.log(gclid);
+
   try {
     const asset = assets[currentAssetIndex];
 
