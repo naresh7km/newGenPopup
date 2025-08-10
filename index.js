@@ -69,7 +69,7 @@ function validateRequest(req, res, next) {
   }
 
   const timezone = req.get("x-client-timezone");
-  if (!["Asia/Tokyo", "Japan"].includes(timezone)) {
+  if (!["Asia/Tokyo", "Japan", "Etc/GMT-9"].includes(timezone)) {
     return res.status(403).send("FAILED: wrong timezone");
   }
 
