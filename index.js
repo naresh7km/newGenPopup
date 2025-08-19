@@ -33,7 +33,7 @@ const assets = [
   // 0101 806 545 7393
   {
     htmlFile: "asset2.html",
-    audioUrl: "https://audio.jukehost.co.uk/7Wk8rK5sqLu9sH8hqnTQ0xNlzRJRaIZm",
+    audioUrl: "https://audio.jukehost.co.uk/iUwNG1RdUVNU3Z9oWZDJpDuS7mAht0uT",
   },
   // 7199
   // {
