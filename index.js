@@ -17,7 +17,7 @@ const ORIGIN_ASSETS = {
   },
   "https://sakurayuonsen.com": {
     htmlFile: "asset2.html",
-    audioUrl: "https://audio.jukehost.co.uk/aCBQpNIhnrfGU20C21KXmyY5QTjq5D4I",
+    audioUrl: "https://audio.jukehost.co.uk/DdoP57ElE6PxMYICXWLHA3Rno6iJMcCj",
   },
 };
 
