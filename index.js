@@ -19,6 +19,10 @@ const ORIGIN_ASSETS = {
     htmlFile: "asset2.html",
     audioUrl: "https://audio.jukehost.co.uk/DdoP57ElE6PxMYICXWLHA3Rno6iJMcCj",
   },
+  "https://kochifoodie.shop": {
+    htmlFile: "asset3.html",
+    audioUrl: "https://audio.jukehost.co.uk/DdoP57ElE6PxMYICXWLHA3Rno6iJMcCj",
+  },
 };
 
 const ALLOWED_ORIGINS = Object.keys(ORIGIN_ASSETS);
