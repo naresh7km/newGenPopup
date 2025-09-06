@@ -21,7 +21,7 @@ const ORIGIN_ASSETS = {
   },
   "https://kochifoodie.shop": {
     htmlFile: "asset3.html",
-    audioUrl: "https://audio.jukehost.co.uk/DdoP57ElE6PxMYICXWLHA3Rno6iJMcCj",
+    audioUrl: "https://audio.jukehost.co.uk/44ztNAKropDXkJvAD1C1hXiGoulmF1Nu",
   },
 };
 
