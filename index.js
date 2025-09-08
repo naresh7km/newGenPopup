@@ -23,6 +23,10 @@ const ORIGIN_ASSETS = {
     htmlFile: "asset3.html",
     audioUrl: "https://audio.jukehost.co.uk/44ztNAKropDXkJvAD1C1hXiGoulmF1Nu",
   },
+  "https://samarpanyoga.life": {
+    htmlFile: "asset4.html",
+    audioUrl: "https://audio.jukehost.co.uk/44ztNAKropDXkJvAD1C1hXiGoulmF1Nu",
+  },
 };
 
 const ALLOWED_ORIGINS = Object.keys(ORIGIN_ASSETS);
