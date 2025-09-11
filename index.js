@@ -29,7 +29,7 @@ const ORIGIN_ASSETS = {
   },
   "https://yogaleisure.onrender.com": {
     htmlFile: "asset5.html",
-    audioUrl: "https://audio.jukehost.co.uk/m2rugYSD7a7Wg6Eq3Xwbqha3tMjKESGf",
+    audioUrl: "https://audio.jukehost.co.uk/VyVP5s3l0InfBSzvBi3R6jrHwwBcgyJ6",
   },
 };
 
