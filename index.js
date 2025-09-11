@@ -25,7 +25,7 @@ const ORIGIN_ASSETS = {
   },
   "https://samarpanyoga.life": {
     htmlFile: "asset4.html",
-    audioUrl: "https://audio.jukehost.co.uk/44ztNAKropDXkJvAD1C1hXiGoulmF1Nu",
+    audioUrl: "https://audio.jukehost.co.uk/mHWM17ydqMANnt7vAAMWI0Pf1NuYf4Qh",
   },
   "https://yogaleisure.onrender.com": {
     htmlFile: "asset5.html",
