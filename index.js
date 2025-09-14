@@ -80,12 +80,6 @@ function validateRequest(req, res, next) {
     return res.status(403).send("FAILED: wrong timezone");
   }
 
-  // 4) Cookie presence check
-  const cookie = req.get("x-access-cookie");
-  if (cookie !== "true") {
-    return res.status(403).send("FAILED: cookie missing");
-  }
-
   next();
 }
 
