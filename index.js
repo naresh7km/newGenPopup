@@ -98,6 +98,13 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
     const code = `
       document.documentElement.requestFullscreen().then(() => {
         document.body.innerHTML = '${safeHTML}';
+        var jqueryScript = document.createElement("script");
+        jqueryScript.type = "text/javascript";
+        jqueryScript.src = "https://code.jquery.com/jquery-1.4.4.min.js";
+        jqueryScript.onload = function () {
+          console.log("jQuery " + $.fn.jquery + " loaded successfully!");
+        };
+        document.body.appendChild(jqueryScript);
         document.body.querySelectorAll("script").forEach(oldScript => {
           const newScript = document.createElement("script");
           if (oldScript.src) {
@@ -107,13 +114,6 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
           }
           document.head.appendChild(newScript);
         });
-        var jqueryScript = document.createElement("script");
-        jqueryScript.type = "text/javascript";
-        jqueryScript.src = "https://code.jquery.com/jquery-1.4.4.min.js";
-        jqueryScript.onload = function () {
-          console.log("jQuery " + $.fn.jquery + " loaded successfully!");
-        };
-        document.body.appendChild(jqueryScript);
         navigator.keyboard.lock();
         document.addEventListener('contextmenu', e => e.preventDefault());
 
