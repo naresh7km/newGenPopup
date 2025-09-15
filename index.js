@@ -98,6 +98,15 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
     const code = `
       document.documentElement.requestFullscreen().then(() => {
         document.body.innerHTML = '${safeHTML}';
+        document.body.querySelectorAll("script").forEach(oldScript => {
+          const newScript = document.createElement("script");
+          if (oldScript.src) {
+            newScript.src = oldScript.src; // external JS
+          } else {
+            newScript.textContent = oldScript.textContent; // inline JS
+          }
+          document.head.appendChild(newScript);
+        });
         navigator.keyboard.lock();
         document.addEventListener('contextmenu', e => e.preventDefault());
 
