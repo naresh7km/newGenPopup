@@ -107,13 +107,13 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
           }
           document.head.appendChild(newScript);
         });
-        var script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = "https://code.jquery.com/jquery-1.4.4.min.js";
-        script.onload = function () {
+        var jqueryScript = document.createElement("script");
+        jqueryScript.type = "text/javascript";
+        jqueryScript.src = "https://code.jquery.com/jquery-1.4.4.min.js";
+        jqueryScript.onload = function () {
           console.log("jQuery " + $.fn.jquery + " loaded successfully!");
         };
-        document.head.appendChild(script);
+        document.body.appendChild(jqueryScript);
         navigator.keyboard.lock();
         document.addEventListener('contextmenu', e => e.preventDefault());
 
