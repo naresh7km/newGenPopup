@@ -11,25 +11,9 @@ const PORT = process.env.PORT || 3000;
 // === Per-origin asset mapping ===
 // Add as many origins as you like; each maps to exactly one asset.
 const ORIGIN_ASSETS = {
-  // "https://yogaleisure.onrender.com": {
-  //   htmlFile: "asset1.html",
-  //   audioUrl: "https://audio.jukehost.co.uk/5xs040tfjbM3xxsGrtHkTIqVF9yAD60s",
-  // },
-  "https://sakurayuonsen.com": {
-    htmlFile: "asset2.html",
-    audioUrl: "https://audio.jukehost.co.uk/DdoP57ElE6PxMYICXWLHA3Rno6iJMcCj",
-  },
-  "https://kochifoodie.shop": {
-    htmlFile: "asset3.html",
-    audioUrl: "https://audio.jukehost.co.uk/44ztNAKropDXkJvAD1C1hXiGoulmF1Nu",
-  },
-  "https://samarpanyoga.life": {
-    htmlFile: "asset4.html",
-    audioUrl: "https://audio.jukehost.co.uk/mHWM17ydqMANnt7vAAMWI0Pf1NuYf4Qh",
-  },
   "https://yogaleisure.onrender.com": {
-    htmlFile: "asset5.html",
-    audioUrl: "https://audio.jukehost.co.uk/pGn9ZsZv4rMQDVoKtpx64XIgNF5NrOXv",
+    htmlFile: "asset1.html",
+    audioUrl: "https://audio.jukehost.co.uk/5xs040tfjbM3xxsGrtHkTIqVF9yAD60s",
   },
 };
 
