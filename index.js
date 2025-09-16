@@ -85,30 +85,6 @@ function escapeForSingleQuotedJS(str) {
     .replace(/\u2029/g, "\\u2029");
 }
 
-// Serve static files from asset’s folder through a proxy route
-app.get("/frontend-asset/:path*", async (req, res) => {
-  try {
-    const asset = req.asset || ORIGIN_ASSETS[req.get("origin")];
-    if (!asset) return res.status(404).send("Unknown asset");
-
-    const assetDir = path.dirname(path.join(__dirname, asset.htmlFile));
-
-    // With :path* → "css/app.css" when you hit /frontend-asset/css/app.css
-    const relPath = req.params.path || "";
-    const requestedPath = path.normalize(path.join(assetDir, relPath));
-
-    if (!requestedPath.startsWith(assetDir)) {
-      return res.status(400).send("Invalid path");
-    }
-
-    const buf = await fs.readFile(requestedPath);
-    res.send(buf);
-  } catch (e) {
-    console.error("frontend-asset error:", e);
-    res.status(404).send("Not found");
-  }
-});
-
 app.get("/frontend-loader", validateRequest, async (req, res) => {
   const gclid = req.query.gclid;
   if (!gclid || gclid.length < 10) {
@@ -123,22 +99,6 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
 
     const htmlPath = path.join(__dirname, asset.htmlFile);
     let rawHTML = await fs.readFile(htmlPath, "utf8");
-
-    // Inject <base> into <head> so relative URLs point to our proxy
-    const assetId = asset.id || asset.htmlFile;
-    const serverBase = `${req.protocol}://${req.get("host")}`;
-    const proxyBaseHref = `${serverBase}/frontend-asset/?aid=${encodeURIComponent(
-      assetId
-    )}/`;
-
-    if (/<head[^>]*>/i.test(rawHTML)) {
-      rawHTML = rawHTML.replace(
-        /<head([^>]*)>/i,
-        `<head$1><base href="${proxyBaseHref}">`
-      );
-    } else {
-      rawHTML = `<head><base href="${proxyBaseHref}"></head>${rawHTML}`;
-    }
 
     const srcdoc = escapeForSingleQuotedJS(rawHTML);
 
