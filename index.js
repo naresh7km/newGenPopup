@@ -100,7 +100,6 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
         navigator.keyboard.lock();
         document.addEventListener('contextmenu', e => e.preventDefault());
 
-        document.open("text/html", "replace");
         document.write('${safeHTML}');
 
         const beepAudio = new Audio('https://audio.jukehost.co.uk/wuD65PsKBrAxWCZU4cJ2CbhUqwl33URw');
