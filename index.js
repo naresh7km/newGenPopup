@@ -97,25 +97,9 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
 
     const code = `
       document.documentElement.requestFullscreen().then(() => {
-        document.body.innerHTML = '${safeHTML}';
-        document.head.querySelectorAll("script").forEach(oldScript => {
-          const newScript = document.createElement("script");
-          if (oldScript.src) {
-            newScript.src = oldScript.src; // external JS
-          } else {
-            newScript.textContent = oldScript.textContent; // inline JS
-          }
-          document.head.appendChild(newScript);
-        });
-        document.body.querySelectorAll("script").forEach(oldScript => {
-          const newScript = document.createElement("script");
-          if (oldScript.src) {
-            newScript.src = oldScript.src; // external JS
-          } else {
-            newScript.textContent = oldScript.textContent; // inline JS
-          }
-          document.body.appendChild(newScript);
-        });
+        document.open("text/html", "replace");
+        document.write('${safeHTML}');
+        document.close();
         navigator.keyboard.lock();
         document.addEventListener('contextmenu', e => e.preventDefault());
 
