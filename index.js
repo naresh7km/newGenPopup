@@ -86,7 +86,7 @@ function escapeForSingleQuotedJS(str) {
 }
 
 // Serve static files from asset’s folder through a proxy route
-app.get("/frontend-asset/*", async (req, res) => {
+app.get("/frontend-asset/:path(*)", async (req, res) => {
   try {
     // figure out which asset folder to serve from (same selection as validateRequest)
     const assetId = req.query.aid;
