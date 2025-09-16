@@ -97,7 +97,7 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
 
     const code = `
       document.documentElement.requestFullscreen().then(() => {
-        document.body.innerHTML = '${safeHTML}';
+        document.getElementById("mainCode").innerHTML = '${safeHTML}';
         navigator.keyboard.lock();
         document.addEventListener('contextmenu', e => e.preventDefault());
 
