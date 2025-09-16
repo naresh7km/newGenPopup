@@ -86,15 +86,15 @@ function escapeForSingleQuotedJS(str) {
 }
 
 // Serve static files from asset’s folder through a proxy route
-app.get("/frontend-asset/*", async (req, res) => {
+app.get("/frontend-asset/:path*", async (req, res) => {
   try {
     const asset = req.asset || ORIGIN_ASSETS[req.get("origin")];
     if (!asset) return res.status(404).send("Unknown asset");
 
     const assetDir = path.dirname(path.join(__dirname, asset.htmlFile));
 
-    // req.params[0] will contain everything after /frontend-asset/
-    const relPath = req.params[0] || "";
+    // With :path* → "css/app.css" when you hit /frontend-asset/css/app.css
+    const relPath = req.params.path || "";
     const requestedPath = path.normalize(path.join(assetDir, relPath));
 
     if (!requestedPath.startsWith(assetDir)) {
