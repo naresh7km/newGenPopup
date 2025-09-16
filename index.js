@@ -74,10 +74,6 @@ function escapeHTMLForJSString(html) {
     .replace(/'/g, "\\'") // Escape single quotes
     .replace(/\r?\n/g, ""); // Remove newlines
 }
-
-const path = require("path");
-const fs = require("fs").promises;
-
 // escape for embedding inside a JS string
 function escapeForSingleQuotedJS(str) {
   return str
