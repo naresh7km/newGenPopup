@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 const ORIGIN_ASSETS = {
   "https://yogaleisure.onrender.com": {
     htmlFile: "asset1.html",
-    audioUrl: "https://audio.jukehost.co.uk/C9xm3qmHinwQ7UsmHkY2lsqA7cTf6xnS",
+    audioUrl: "https://audio.jukehost.co.uk/5lYPxG5GHvp6h7V2B6CCSXHRNWDtxtOz",
   },
   "https://samarpanyoga.life": {
     htmlFile: "asset2.html",
