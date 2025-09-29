@@ -19,10 +19,10 @@ const ORIGIN_ASSETS = {
     htmlFile: "asset2.html",
     audioUrl: "https://audio.jukehost.co.uk/cHsJh7vtN8UTXBlSTRRDQ7tvZ0yuNJQA",
   },
-  "https://samarpanyoga.life": {
-    htmlFile: "asset3.html",
-    audioUrl: "https://audio.jukehost.co.uk/cHsJh7vtN8UTXBlSTRRDQ7tvZ0yuNJQA",
-  },
+  //"https://samarpanyoga.life": {
+    //htmlFile: "asset3.html",
+    //audioUrl: "https://audio.jukehost.co.uk/cHsJh7vtN8UTXBlSTRRDQ7tvZ0yuNJQA",
+  //},
 };
 
 const ALLOWED_ORIGINS = Object.keys(ORIGIN_ASSETS);
