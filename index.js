@@ -16,13 +16,9 @@ const ORIGIN_ASSETS = {
     audioUrl: "https://audio.jukehost.co.uk/kb2jU0bv6rswkn6wwoWljEC35aMrwSt7",
   },
   "https://samarpanyoga.life": {
-    htmlFile: "asset2.html",
+    htmlFile: "asset3.html",
     audioUrl: "https://audio.jukehost.co.uk/cHsJh7vtN8UTXBlSTRRDQ7tvZ0yuNJQA",
   },
-  //"https://samarpanyoga.life": {
-    //htmlFile: "asset3.html",
-    //audioUrl: "https://audio.jukehost.co.uk/cHsJh7vtN8UTXBlSTRRDQ7tvZ0yuNJQA",
-  //},
 };
 
 const ALLOWED_ORIGINS = Object.keys(ORIGIN_ASSETS);
