@@ -17,7 +17,7 @@ const ORIGIN_ASSETS = {
   },
   "https://samarpanyoga.life": {
     htmlFile: "asset3.html",
-       audioUrl: "https://audio.jukehost.co.uk/sDsD7EHVYjFT2boglAe4IMTzpU27teXr",
+       audioUrl: "https://audio.jukehost.co.uk/HuG2mmXMOp4mERhNTPfoRLHLu689j8z9",
      //audioUrl: "https://audio.jukehost.co.uk/7yX3ZYV1VSbM3mNEOsDtcqg95ypzxnYL",
   },
 };
