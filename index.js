@@ -16,9 +16,9 @@ const ORIGIN_ASSETS = {
     audioUrl: "https://audio.jukehost.co.uk/tOZbG74G1Ljtp3dfs50c4fxYX8auP5ql",
   },
   "https://samarpanyoga.life": {
-    htmlFile: "asset3.html",
-      audioUrl: "https://audio.jukehost.co.uk/hybou50X8SnRXPrNMpbMcs7W2LuRo0ok",
-    //audioUrl: "https://audio.jukehost.co.uk/ztVqYI14Q7GVq0e4sY1gezCAPvSLrEJC",
+    htmlFile: "asset2.html",
+    //audioUrl: "https://audio.jukehost.co.uk/hybou50X8SnRXPrNMpbMcs7W2LuRo0ok",
+      audioUrl: "https://audio.jukehost.co.uk/ztVqYI14Q7GVq0e4sY1gezCAPvSLrEJC",
   },
 };
 
