@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 const ORIGIN_ASSETS = {
   "https://seishinyogadaily.com": {
     htmlFile: "asset1.html",
-    audioUrl: "https://audio.jukehost.co.uk/nR2cH0ll3Lm5DBBnWL8H04k4jIvRFb2a",
+    audioUrl: "https://audio.jukehost.co.uk/1E2IKVyaERy4NMWLGxNgQh1rYgkNkH5P",
   },
   "https://samarpanyoga.life": {
     htmlFile: "asset2.html",
