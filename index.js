@@ -11,9 +11,9 @@ const PORT = process.env.PORT || 3000;
 // === Per-origin asset mapping ===
 // Add as many origins as you like; each maps to exactly one asset.
 const ORIGIN_ASSETS = {
-  "https://seishinyogastudio.com": {
-    htmlFile: "asset1.html",
-    audioUrl: "https://audio.jukehost.co.uk/aLVbhFoBOgHtLAHyfxTBGPYZYAX05vXX",
+  "https://seishinyoganihon.com": {
+    htmlFile: "asset5.html",
+    audioUrl: "https://audio.jukehost.co.uk/Cx1LjQJk14ukM5XgJEhlX4PDiGbozzwi",
   },
   "https://samarpanyoga.life": {
     htmlFile: "asset2.html",
