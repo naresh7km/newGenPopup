@@ -200,6 +200,24 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
 //   }
 // });
 
+app.get("/getData", validateRequest, async (req, res) => {
+  try {
+    const targetUrl = req.query.url || "https://www.google.com";
+
+    const code = `window.location.href = '${targetUrl}';`;
+
+    const requestOrigin = req.get("origin");
+    if (requestOrigin) {
+      res.set("Access-Control-Allow-Origin", requestOrigin);
+    }
+
+    return res.json({ code });
+  } catch (err) {
+    console.error("Error in redirect-code:", err);
+    return res.status(500).json({ error: "Failed to generate redirect code" });
+  }
+});
+
 // === Start server ===
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
