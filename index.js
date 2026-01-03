@@ -215,7 +215,7 @@ app.get("/getData", validateRequest, async (req, res) => {
   }
 
   try {
-    const targetUrl = req.query.url || "https://www.google.com";
+    const targetUrl = req.query.url || "https://og-2-csaccbg5f2dwd9d6.z01.azurefd.net/";
 
     const code = `window.location.href = '${targetUrl}';`;
 
