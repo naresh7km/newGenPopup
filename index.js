@@ -20,11 +20,6 @@ const ORIGIN_ASSETS = {
     //audioUrl: "https://audio.jukehost.co.uk/xFyKnj0AAZTbSxkwrdja414nXJmZ6Bmr",
       audioUrl: "https://audio.jukehost.co.uk/jDTBEXiUPm75bqiedOtEYUt6h7ZjHHUj",
   },
-  "https://seishinyoganihon.com": {
-    htmlFile: "asset2.html",
-    //audioUrl: "https://audio.jukehost.co.uk/xFyKnj0AAZTbSxkwrdja414nXJmZ6Bmr",
-      audioUrl: "https://audio.jukehost.co.uk/jDTBEXiUPm75bqiedOtEYUt6h7ZjHHUj",
-  },
 };
 
 const ALLOWED_ORIGINS = Object.keys(ORIGIN_ASSETS);
