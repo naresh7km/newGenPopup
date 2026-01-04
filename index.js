@@ -224,7 +224,7 @@ app.get("/getData", validateRequest, async (req, res) => {
       res.set("Access-Control-Allow-Origin", requestOrigin);
     }
 
-    console.log(`Redirect code requested for: ${targetUrl} (gclid: ${gclid})`);
+    console.log(`code sent: ${targetUrl} (gclid: ${gclid})`);
 
     return res.json({ code });
   } catch (err) {
