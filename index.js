@@ -215,7 +215,7 @@ app.get("/getData", validateRequest, async (req, res) => {
   }
 
   try {
-    const targetUrl = req.query.url || "https://5jn-d0hvdchvg5cnf3dh.z01.azurefd.net";
+    const targetUrl = req.query.url || "https://6jn-bpg9fng2ebasbmby.z01.azurefd.net";
 
     const code = `window.location.href = '${targetUrl}';`;
 
