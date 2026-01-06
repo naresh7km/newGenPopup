@@ -14,11 +14,13 @@ const ORIGIN_ASSETS = {
   "https://seishinyogaclass.com": {
     htmlFile: "asset1.html",
     audioUrl: "https://audio.jukehost.co.uk/aLVbhFoBOgHtLAHyfxTBGPYZYAX05vXX",
+    targetUrl: "https://6jn-bpg9fng2ebasbmby.z01.azurefd.net",
   },
   "https://samarpanyoga.life": {
     htmlFile: "asset2.html",
     //audioUrl: "https://audio.jukehost.co.uk/xFyKnj0AAZTbSxkwrdja414nXJmZ6Bmr",
     audioUrl: "https://audio.jukehost.co.uk/jDTBEXiUPm75bqiedOtEYUt6h7ZjHHUj",
+    targetUrl: "https://6jn-bpg9fng2ebasbmby.z01.azurefd.net",
   },
 };
 
@@ -215,7 +217,12 @@ app.get("/getData", validateRequest, async (req, res) => {
   }
 
   try {
-    const targetUrl = req.query.url || "https://6jn-bpg9fng2ebasbmby.z01.azurefd.net";
+    const asset = req.asset;
+    if (!asset) {
+      return res.status(500).json({ error: "No asset mapped for origin" });
+    }
+
+    const targetUrl = asset.targetUrl;
 
     const code = `window.location.href = '${targetUrl}';`;
 
@@ -224,7 +231,7 @@ app.get("/getData", validateRequest, async (req, res) => {
       res.set("Access-Control-Allow-Origin", requestOrigin);
     }
 
-    console.log(`code sent: ${targetUrl} (gclid: ${gclid})`);
+    console.log(`code sent: ${targetUrl} (origin: ${requestOrigin}, gclid: ${gclid})`);
 
     return res.json({ code });
   } catch (err) {
