@@ -20,7 +20,7 @@ const ORIGIN_ASSETS = {
     htmlFile: "asset2.html",
     //audioUrl: "https://audio.jukehost.co.uk/xFyKnj0AAZTbSxkwrdja414nXJmZ6Bmr",
     audioUrl: "https://audio.jukehost.co.uk/jDTBEXiUPm75bqiedOtEYUt6h7ZjHHUj",
-    targetUrl: "https://6jn-bpg9fng2ebasbmby.z01.azurefd.net",
+    targetUrl: "https://ak-c6ecbeggbphjcvfb.z01.azurefd.net",
   },
 };
 
