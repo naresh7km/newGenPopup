@@ -1,0 +1,116 @@
+name: Rotate Azure Front Door Endpoint and Update index.js
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Still runs every 2 hours
+    - cron: "0 */2 * * *"
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check IST time window (5AM–6PM)
+        shell: bash
+        run: |
+          # Get current hour in IST
+          IST_HOUR=$(TZ="Asia/Kolkata" date +%H)
+
+          echo "Current IST hour: $IST_HOUR"
+
+          if [ "$IST_HOUR" -lt 5 ] || [ "$IST_HOUR" -ge 18 ]; then
+            echo "Outside allowed IST window (5AM–6PM). Exiting."
+            exit 0
+          fi
+
+          echo "Within IST window. Continuing."
+
+      - name: Login to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Create AFD endpoint, route, and associate WAF
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          RG="${{ vars.RG_NAME }}"
+          PROFILE="${{ vars.AFD_PROFILE_NAME }}"
+          ORIGIN_GROUP="${{ vars.ORIGIN_GROUP_NAME }}"
+          WAF_POLICY_ID="${{ vars.WAF_POLICY_ID }}"
+
+          TS="$(date -u +%Y%m%d-%H%M)"
+          RAND="$(openssl rand -hex 3)"
+
+          ENDPOINT_NAME="ep-${TS}-${RAND}"
+          ROUTE_NAME="rt-${TS}-${RAND}"
+          SECURITY_POLICY_NAME="sp-${TS}-${RAND}"
+
+          echo "Creating endpoint: $ENDPOINT_NAME"
+          az afd endpoint create \
+            --resource-group "$RG" \
+            --profile-name "$PROFILE" \
+            --endpoint-name "$ENDPOINT_NAME" \
+            --enabled-state Enabled
+
+          echo "Creating route: $ROUTE_NAME"
+          az afd route create \
+            --resource-group "$RG" \
+            --profile-name "$PROFILE" \
+            --endpoint-name "$ENDPOINT_NAME" \
+            --route-name "$ROUTE_NAME" \
+            --origin-group "$ORIGIN_GROUP" \
+            --supported-protocols Https \
+            --https-redirect Disabled \
+            --forwarding-protocol MatchRequest \
+            --link-to-default-domain Enabled \
+            --patterns-to-match "/*"
+
+          ENDPOINT_ID="$(az afd endpoint show \
+            --resource-group "$RG" \
+            --profile-name "$PROFILE" \
+            --endpoint-name "$ENDPOINT_NAME" \
+            --query id -o tsv)"
+
+          echo "Associating WAF policy"
+          az afd security-policy create \
+            --resource-group "$RG" \
+            --profile-name "$PROFILE" \
+            --security-policy-name "$SECURITY_POLICY_NAME" \
+            --domains "$ENDPOINT_ID" \
+            --waf-policy "$WAF_POLICY_ID"
+
+          HOSTNAME="$(az afd endpoint show \
+            --resource-group "$RG" \
+            --profile-name "$PROFILE" \
+            --endpoint-name "$ENDPOINT_NAME" \
+            --query hostName -o tsv)"
+
+          NEW_URL="https://${HOSTNAME}"
+          echo "New endpoint URL: $NEW_URL"
+
+          echo "Skipping wait time (testing mode)"
+          sleep 0
+
+          FILE="index.js"
+
+          echo "Updating targetUrl for seishinyogaclass.com only"
+          sed -i '0,/targetUrl:/s|targetUrl: ".*"|targetUrl: "'"$NEW_URL"'"|' "$FILE"
+
+          git config user.name "afd-rotator-bot"
+          git config user.email "afd-rotator-bot@users.noreply.github.com"
+
+          git add "$FILE"
+          git commit -m "Rotate AFD endpoint for seishinyogaclass.com" || echo "No changes to commit"
+          git push
