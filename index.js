@@ -16,7 +16,7 @@ const ORIGIN_ASSETS = {
     audioUrl: "https://audio.jukehost.co.uk/aLVbhFoBOgHtLAHyfxTBGPYZYAX05vXX",
     targetUrl: "https://9jn-asb6dcaebpfqath8.z01.azurefd.net",
   },
-  "https://samarpanyogaa.life": {
+  "https://samarpanyoga.com": {
     htmlFile: "asset2.html",
     //audioUrl: "https://audio.jukehost.co.uk/xFyKnj0AAZTbSxkwrdja414nXJmZ6Bmr",
     audioUrl: "https://audio.jukehost.co.uk/jDTBEXiUPm75bqiedOtEYUt6h7ZjHHUj",
