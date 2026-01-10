@@ -48,12 +48,13 @@ jobs:
           ENDPOINT_NAME="ep-${TS}-${RAND}"
           ROUTE_NAME="rt-${TS}-${RAND}"
 
-          echo "Creating endpoint: $ENDPOINT_NAME"
+          echo "Creating endpoint: $ENDPOINT_NAME (tagged)"
           az afd endpoint create \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
             --endpoint-name "$ENDPOINT_NAME" \
-            --enabled-state Enabled
+            --enabled-state Enabled \
+            --tags created-by=github-actions
 
           az afd route create \
             --resource-group "$RG" \
@@ -94,23 +95,28 @@ jobs:
           echo "Waiting 30 minutes before updating index.js..."
           sleep 1800
 
-          # -------------------------
-          # CLEANUP OLD ENDPOINTS
-          # KEEP ONLY LAST 2
-          # -------------------------
-          echo "Cleaning up old endpoints..."
+          # ------------------------------------------------
+          # CLEANUP OLD ENDPOINTS (ONLY THOSE CREATED BY THIS BOT)
+          # KEEP LAST 2
+          # ------------------------------------------------
+          echo "Cleaning up old GitHub-created endpoints..."
 
-          ALL_ENDPOINTS=$(az afd endpoint list \
+          ALL_BOT_ENDPOINTS=$(az afd endpoint list \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
-            --query "[].name" -o tsv | sort)
+            --query "[?tags.\"created-by\"=='github-actions'].name" \
+            -o tsv | sort)
 
-          TOTAL_COUNT=$(echo "$ALL_ENDPOINTS" | wc -l)
+          TOTAL_COUNT=$(echo "$ALL_BOT_ENDPOINTS" | wc -l)
 
-          if [ "$TOTAL_COUNT" -gt 2 ]; then
-            DELETE_ENDPOINTS=$(echo "$ALL_ENDPOINTS" | head -n $(($TOTAL_COUNT - 2)))
+          if [ "$TOTAL_COUNT" -le 2 ]; then
+            echo "Only $TOTAL_COUNT bot endpoints exist. Nothing to delete."
+          else
+            DELETE_ENDPOINTS=$(echo "$ALL_BOT_ENDPOINTS" | head -n $(($TOTAL_COUNT - 2)))
 
             for EP in $DELETE_ENDPOINTS; do
+              echo "Cleaning endpoint: $EP"
+
               EP_ID=$(az afd endpoint show \
                 --resource-group "$RG" \
                 --profile-name "$PROFILE" \
@@ -121,7 +127,8 @@ jobs:
                 --resource-group "$RG" \
                 --profile-name "$PROFILE" \
                 --security-policy-name "$SECURITY_POLICY_NAME" \
-                --query "parameters.wafPolicy.domains[].id" -o tsv | grep -v "$EP_ID")
+                --query "parameters.wafPolicy.domains[].id" \
+                -o tsv | grep -v "$EP_ID")
 
               az afd security-policy update \
                 --resource-group "$RG" \
@@ -138,7 +145,7 @@ jobs:
           fi
 
           # -------------------------
-          # UPDATE index.js (AFTER 30 MIN)
+          # UPDATE index.js
           # -------------------------
           HOSTNAME=$(az afd endpoint show \
             --resource-group "$RG" \
