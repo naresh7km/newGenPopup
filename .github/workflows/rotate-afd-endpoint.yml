@@ -17,25 +17,40 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ------------------------------------------------
+      # DECIDE WHETHER JOB SHOULD RUN (IST WINDOW)
+      # ------------------------------------------------
       - name: Check IST time window (5AM–6PM)
+        id: timecheck
         shell: bash
         run: |
           IST_HOUR=$(TZ="Asia/Kolkata" date +%H)
-          if [ "$IST_HOUR" -lt 5 ] || [ "$IST_HOUR" -ge 18 ]; then
-            echo "Outside IST window. Exiting."
-            exit 0
+          echo "Current IST hour: $IST_HOUR"
+
+          if [ "$IST_HOUR" -ge 5 ] && [ "$IST_HOUR" -lt 18 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Within IST window. Job will run."
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Outside IST window. Job will NOT run."
           fi
 
-      # -------- FIRST LOGIN (creation phase) --------
+      # ------------------------------------------------
+      # LOGIN (ONLY IF TIME WINDOW ALLOWS)
+      # ------------------------------------------------
       - name: Login to Azure (OIDC)
+        if: steps.timecheck.outputs.run == 'true'
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # -------- CREATE + WAF UPDATE --------
+      # ------------------------------------------------
+      # CREATE ENDPOINT + WAF UPDATE
+      # ------------------------------------------------
       - name: Create AFD endpoint and update WAF
+        if: steps.timecheck.outputs.run == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -50,7 +65,6 @@ jobs:
           ENDPOINT_NAME="ep-${TS}-${RAND}"
           ROUTE_NAME="rt-${TS}-${RAND}"
 
-          echo "Creating endpoint: $ENDPOINT_NAME (tagged)"
           az afd endpoint create \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
@@ -70,45 +84,53 @@ jobs:
             --link-to-default-domain Enabled \
             --patterns-to-match "/*"
 
-          NEW_ENDPOINT_ID=$(az afd endpoint show \
+          ENDPOINT_ID=$(az afd endpoint show \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
             --endpoint-name "$ENDPOINT_NAME" \
             --query id -o tsv)
 
-          echo "Updating WAF security policy"
           EXISTING_DOMAINS=$(az afd security-policy show \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
             --security-policy-name "$SECURITY_POLICY_NAME" \
             --query "parameters.wafPolicy.domains[].id" -o tsv)
 
-          if ! echo "$EXISTING_DOMAINS" | grep -q "$NEW_ENDPOINT_ID"; then
+          if ! echo "$EXISTING_DOMAINS" | grep -q "$ENDPOINT_ID"; then
             az afd security-policy update \
               --resource-group "$RG" \
               --profile-name "$PROFILE" \
               --security-policy-name "$SECURITY_POLICY_NAME" \
-              --domains $EXISTING_DOMAINS $NEW_ENDPOINT_ID
+              --domains $EXISTING_DOMAINS $ENDPOINT_ID
           fi
 
           echo "$ENDPOINT_NAME" > /tmp/new_endpoint_name
 
-      # -------- WAIT 1 HOUR --------
+      # ------------------------------------------------
+      # WAIT 1 HOUR (ONLY IF JOB RAN)
+      # ------------------------------------------------
       - name: Wait for Azure Front Door propagation
+        if: steps.timecheck.outputs.run == 'true'
         run: |
           echo "Waiting 1 hour for Azure Front Door propagation..."
           sleep 3600
 
-      # -------- SECOND LOGIN (token refresh) --------
-      - name: Re-login to Azure after wait (OIDC refresh)
+      # ------------------------------------------------
+      # RE-LOGIN (OIDC REFRESH)
+      # ------------------------------------------------
+      - name: Re-login to Azure after wait
+        if: steps.timecheck.outputs.run == 'true'
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # -------- CLEANUP + INDEX.JS UPDATE --------
+      # ------------------------------------------------
+      # CLEANUP + UPDATE index.js
+      # ------------------------------------------------
       - name: Cleanup old endpoints and update index.js
+        if: steps.timecheck.outputs.run == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -119,18 +141,16 @@ jobs:
 
           ENDPOINT_NAME=$(cat /tmp/new_endpoint_name)
 
-          echo "Cleaning up old GitHub-created endpoints..."
-
           ALL_BOT_ENDPOINTS=$(az afd endpoint list \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
             --query "[?tags.\"created-by\"=='github-actions'].name" \
             -o tsv | sort)
 
-          TOTAL_COUNT=$(echo "$ALL_BOT_ENDPOINTS" | wc -l)
+          COUNT=$(echo "$ALL_BOT_ENDPOINTS" | wc -l)
 
-          if [ "$TOTAL_COUNT" -gt 2 ]; then
-            DELETE_ENDPOINTS=$(echo "$ALL_BOT_ENDPOINTS" | head -n $(($TOTAL_COUNT - 2)))
+          if [ "$COUNT" -gt 2 ]; then
+            DELETE_ENDPOINTS=$(echo "$ALL_BOT_ENDPOINTS" | head -n $(($COUNT - 2)))
 
             for EP in $DELETE_ENDPOINTS; do
               EP_ID=$(az afd endpoint show \
@@ -171,5 +191,5 @@ jobs:
           git config user.name "afd-rotator-bot"
           git config user.email "afd-rotator-bot@users.noreply.github.com"
           git add index.js
-          git commit -m "Rotate AFD endpoint after 1 hour (keep last 2)" || echo "No changes"
+          git commit -m "Rotate AFD endpoint (IST window enforced)" || echo "No changes"
           git push
