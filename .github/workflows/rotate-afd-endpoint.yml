@@ -33,7 +33,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Create AFD endpoint, route, update WAF, and cleanup old endpoints
+      - name: Create AFD endpoint, update WAF, wait, cleanup, update index.js
         shell: bash
         run: |
           set -euo pipefail
@@ -73,9 +73,7 @@ jobs:
             --endpoint-name "$ENDPOINT_NAME" \
             --query id -o tsv)
 
-          # -------------------------
-          # UPDATE WAF SECURITY POLICY
-          # -------------------------
+          echo "Updating WAF security policy"
           EXISTING_DOMAINS=$(az afd security-policy show \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
@@ -90,6 +88,12 @@ jobs:
               --domains $EXISTING_DOMAINS $NEW_ENDPOINT_ID
           fi
 
+          # ------------------------------------------------
+          # WAIT 30 MINUTES FOR AZURE FRONT DOOR PROPAGATION
+          # ------------------------------------------------
+          echo "Waiting 30 minutes before updating index.js..."
+          sleep 1800
+
           # -------------------------
           # CLEANUP OLD ENDPOINTS
           # KEEP ONLY LAST 2
@@ -103,45 +107,38 @@ jobs:
 
           TOTAL_COUNT=$(echo "$ALL_ENDPOINTS" | wc -l)
 
-          if [ "$TOTAL_COUNT" -le 2 ]; then
-            echo "Only $TOTAL_COUNT endpoints exist. Nothing to delete."
-            exit 0
+          if [ "$TOTAL_COUNT" -gt 2 ]; then
+            DELETE_ENDPOINTS=$(echo "$ALL_ENDPOINTS" | head -n $(($TOTAL_COUNT - 2)))
+
+            for EP in $DELETE_ENDPOINTS; do
+              EP_ID=$(az afd endpoint show \
+                --resource-group "$RG" \
+                --profile-name "$PROFILE" \
+                --endpoint-name "$EP" \
+                --query id -o tsv)
+
+              UPDATED_DOMAINS=$(az afd security-policy show \
+                --resource-group "$RG" \
+                --profile-name "$PROFILE" \
+                --security-policy-name "$SECURITY_POLICY_NAME" \
+                --query "parameters.wafPolicy.domains[].id" -o tsv | grep -v "$EP_ID")
+
+              az afd security-policy update \
+                --resource-group "$RG" \
+                --profile-name "$PROFILE" \
+                --security-policy-name "$SECURITY_POLICY_NAME" \
+                --domains $UPDATED_DOMAINS
+
+              az afd endpoint delete \
+                --resource-group "$RG" \
+                --profile-name "$PROFILE" \
+                --endpoint-name "$EP" \
+                --yes
+            done
           fi
 
-          # Endpoints to delete = all except last 2
-          DELETE_ENDPOINTS=$(echo "$ALL_ENDPOINTS" | head -n $(($TOTAL_COUNT - 2)))
-
-          for EP in $DELETE_ENDPOINTS; do
-            echo "Removing WAF association for $EP"
-
-            EP_ID=$(az afd endpoint show \
-              --resource-group "$RG" \
-              --profile-name "$PROFILE" \
-              --endpoint-name "$EP" \
-              --query id -o tsv)
-
-            UPDATED_DOMAINS=$(az afd security-policy show \
-              --resource-group "$RG" \
-              --profile-name "$PROFILE" \
-              --security-policy-name "$SECURITY_POLICY_NAME" \
-              --query "parameters.wafPolicy.domains[].id" -o tsv | grep -v "$EP_ID")
-
-            az afd security-policy update \
-              --resource-group "$RG" \
-              --profile-name "$PROFILE" \
-              --security-policy-name "$SECURITY_POLICY_NAME" \
-              --domains $UPDATED_DOMAINS
-
-            echo "Deleting endpoint $EP"
-            az afd endpoint delete \
-              --resource-group "$RG" \
-              --profile-name "$PROFILE" \
-              --endpoint-name "$EP" \
-              --yes
-          done
-
           # -------------------------
-          # UPDATE index.js
+          # UPDATE index.js (AFTER 30 MIN)
           # -------------------------
           HOSTNAME=$(az afd endpoint show \
             --resource-group "$RG" \
@@ -155,5 +152,5 @@ jobs:
           git config user.name "afd-rotator-bot"
           git config user.email "afd-rotator-bot@users.noreply.github.com"
           git add index.js
-          git commit -m "Rotate AFD endpoint (keep last 2)" || echo "No changes"
+          git commit -m "Rotate AFD endpoint after 30 min (keep last 2)" || echo "No changes"
           git push
