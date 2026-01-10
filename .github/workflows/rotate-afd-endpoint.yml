@@ -3,7 +3,7 @@ name: Rotate Azure Front Door Endpoint and Update index.js
 on:
   workflow_dispatch:
   schedule:
-    # Still runs every 2 hours
+    # Runs every 2 hours
     - cron: "0 */2 * * *"
 
 permissions:
@@ -21,9 +21,7 @@ jobs:
       - name: Check IST time window (5AM–6PM)
         shell: bash
         run: |
-          # Get current hour in IST
           IST_HOUR=$(TZ="Asia/Kolkata" date +%H)
-
           echo "Current IST hour: $IST_HOUR"
 
           if [ "$IST_HOUR" -lt 5 ] || [ "$IST_HOUR" -ge 18 ]; then
@@ -40,7 +38,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Create AFD endpoint, route, and associate WAF
+      - name: Create AFD endpoint, route, and update WAF domains
         shell: bash
         run: |
           set -euo pipefail
@@ -48,14 +46,15 @@ jobs:
           RG="${{ vars.RG_NAME }}"
           PROFILE="${{ vars.AFD_PROFILE_NAME }}"
           ORIGIN_GROUP="${{ vars.ORIGIN_GROUP_NAME }}"
-          WAF_POLICY_ID="${{ vars.WAF_POLICY_ID }}"
+
+          # EXISTING Front Door Security Policy name (from portal)
+          SECURITY_POLICY_NAME="e51e4907-8ad0-4924-8132-128f8339f018"
 
           TS="$(date -u +%Y%m%d-%H%M)"
           RAND="$(openssl rand -hex 3)"
 
           ENDPOINT_NAME="ep-${TS}-${RAND}"
           ROUTE_NAME="rt-${TS}-${RAND}"
-          SECURITY_POLICY_NAME="sp-${TS}-${RAND}"
 
           echo "Creating endpoint: $ENDPOINT_NAME"
           az afd endpoint create \
@@ -83,13 +82,24 @@ jobs:
             --endpoint-name "$ENDPOINT_NAME" \
             --query id -o tsv)"
 
-          echo "Associating WAF policy"
-          az afd security-policy create \
+          echo "Fetching existing WAF-protected domains..."
+          EXISTING_DOMAINS=$(az afd security-policy show \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
             --security-policy-name "$SECURITY_POLICY_NAME" \
-            --domains "$ENDPOINT_ID" \
-            --waf-policy "$WAF_POLICY_ID"
+            --query "parameters.wafPolicy.domains[].id" \
+            -o tsv)
+
+          if echo "$EXISTING_DOMAINS" | grep -q "$ENDPOINT_ID"; then
+            echo "Endpoint already associated with WAF. Skipping."
+          else
+            echo "Adding new endpoint to WAF policy..."
+            az afd security-policy update \
+              --resource-group "$RG" \
+              --profile-name "$PROFILE" \
+              --security-policy-name "$SECURITY_POLICY_NAME" \
+              --domains $EXISTING_DOMAINS $ENDPOINT_ID
+          fi
 
           HOSTNAME="$(az afd endpoint show \
             --resource-group "$RG" \
