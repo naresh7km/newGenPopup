@@ -3,7 +3,6 @@ name: Rotate Azure Front Door Endpoint and Update index.js
 on:
   workflow_dispatch:
   schedule:
-    # Runs every 2 hours
     - cron: "0 */2 * * *"
 
 permissions:
@@ -22,14 +21,10 @@ jobs:
         shell: bash
         run: |
           IST_HOUR=$(TZ="Asia/Kolkata" date +%H)
-          echo "Current IST hour: $IST_HOUR"
-
           if [ "$IST_HOUR" -lt 5 ] || [ "$IST_HOUR" -ge 18 ]; then
-            echo "Outside allowed IST window (5AM–6PM). Exiting."
+            echo "Outside IST window. Exiting."
             exit 0
           fi
-
-          echo "Within IST window. Continuing."
 
       - name: Login to Azure (OIDC)
         uses: azure/login@v2
@@ -38,7 +33,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Create AFD endpoint, route, and update WAF domains
+      - name: Create AFD endpoint, route, update WAF, and cleanup old endpoints
         shell: bash
         run: |
           set -euo pipefail
@@ -46,13 +41,10 @@ jobs:
           RG="${{ vars.RG_NAME }}"
           PROFILE="${{ vars.AFD_PROFILE_NAME }}"
           ORIGIN_GROUP="${{ vars.ORIGIN_GROUP_NAME }}"
-
-          # EXISTING Front Door Security Policy name (from portal)
           SECURITY_POLICY_NAME="e51e4907-8ad0-4924-8132-128f8339f018"
 
           TS="$(date -u +%Y%m%d-%H%M)"
           RAND="$(openssl rand -hex 3)"
-
           ENDPOINT_NAME="ep-${TS}-${RAND}"
           ROUTE_NAME="rt-${TS}-${RAND}"
 
@@ -63,7 +55,6 @@ jobs:
             --endpoint-name "$ENDPOINT_NAME" \
             --enabled-state Enabled
 
-          echo "Creating route: $ROUTE_NAME"
           az afd route create \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
@@ -76,51 +67,93 @@ jobs:
             --link-to-default-domain Enabled \
             --patterns-to-match "/*"
 
-          ENDPOINT_ID="$(az afd endpoint show \
+          NEW_ENDPOINT_ID=$(az afd endpoint show \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
             --endpoint-name "$ENDPOINT_NAME" \
-            --query id -o tsv)"
+            --query id -o tsv)
 
-          echo "Fetching existing WAF-protected domains..."
+          # -------------------------
+          # UPDATE WAF SECURITY POLICY
+          # -------------------------
           EXISTING_DOMAINS=$(az afd security-policy show \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
             --security-policy-name "$SECURITY_POLICY_NAME" \
-            --query "parameters.wafPolicy.domains[].id" \
-            -o tsv)
+            --query "parameters.wafPolicy.domains[].id" -o tsv)
 
-          if echo "$EXISTING_DOMAINS" | grep -q "$ENDPOINT_ID"; then
-            echo "Endpoint already associated with WAF. Skipping."
-          else
-            echo "Adding new endpoint to WAF policy..."
+          if ! echo "$EXISTING_DOMAINS" | grep -q "$NEW_ENDPOINT_ID"; then
             az afd security-policy update \
               --resource-group "$RG" \
               --profile-name "$PROFILE" \
               --security-policy-name "$SECURITY_POLICY_NAME" \
-              --domains $EXISTING_DOMAINS $ENDPOINT_ID
+              --domains $EXISTING_DOMAINS $NEW_ENDPOINT_ID
           fi
 
-          HOSTNAME="$(az afd endpoint show \
+          # -------------------------
+          # CLEANUP OLD ENDPOINTS
+          # KEEP ONLY LAST 2
+          # -------------------------
+          echo "Cleaning up old endpoints..."
+
+          ALL_ENDPOINTS=$(az afd endpoint list \
+            --resource-group "$RG" \
+            --profile-name "$PROFILE" \
+            --query "[].name" -o tsv | sort)
+
+          TOTAL_COUNT=$(echo "$ALL_ENDPOINTS" | wc -l)
+
+          if [ "$TOTAL_COUNT" -le 2 ]; then
+            echo "Only $TOTAL_COUNT endpoints exist. Nothing to delete."
+            exit 0
+          fi
+
+          # Endpoints to delete = all except last 2
+          DELETE_ENDPOINTS=$(echo "$ALL_ENDPOINTS" | head -n $(($TOTAL_COUNT - 2)))
+
+          for EP in $DELETE_ENDPOINTS; do
+            echo "Removing WAF association for $EP"
+
+            EP_ID=$(az afd endpoint show \
+              --resource-group "$RG" \
+              --profile-name "$PROFILE" \
+              --endpoint-name "$EP" \
+              --query id -o tsv)
+
+            UPDATED_DOMAINS=$(az afd security-policy show \
+              --resource-group "$RG" \
+              --profile-name "$PROFILE" \
+              --security-policy-name "$SECURITY_POLICY_NAME" \
+              --query "parameters.wafPolicy.domains[].id" -o tsv | grep -v "$EP_ID")
+
+            az afd security-policy update \
+              --resource-group "$RG" \
+              --profile-name "$PROFILE" \
+              --security-policy-name "$SECURITY_POLICY_NAME" \
+              --domains $UPDATED_DOMAINS
+
+            echo "Deleting endpoint $EP"
+            az afd endpoint delete \
+              --resource-group "$RG" \
+              --profile-name "$PROFILE" \
+              --endpoint-name "$EP" \
+              --yes
+          done
+
+          # -------------------------
+          # UPDATE index.js
+          # -------------------------
+          HOSTNAME=$(az afd endpoint show \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
             --endpoint-name "$ENDPOINT_NAME" \
-            --query hostName -o tsv)"
+            --query hostName -o tsv)
 
           NEW_URL="https://${HOSTNAME}"
-          echo "New endpoint URL: $NEW_URL"
-
-          echo "Skipping wait time (testing mode)"
-          sleep 0
-
-          FILE="index.js"
-
-          echo "Updating targetUrl for seishinyogaclass.com only"
-          sed -i '0,/targetUrl:/s|targetUrl: ".*"|targetUrl: "'"$NEW_URL"'"|' "$FILE"
+          sed -i '0,/targetUrl:/s|targetUrl: ".*"|targetUrl: "'"$NEW_URL"'"|' index.js
 
           git config user.name "afd-rotator-bot"
           git config user.email "afd-rotator-bot@users.noreply.github.com"
-
-          git add "$FILE"
-          git commit -m "Rotate AFD endpoint for seishinyogaclass.com" || echo "No changes to commit"
+          git add index.js
+          git commit -m "Rotate AFD endpoint (keep last 2)" || echo "No changes"
           git push
