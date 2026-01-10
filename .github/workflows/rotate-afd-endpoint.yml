@@ -26,6 +26,7 @@ jobs:
             exit 0
           fi
 
+      # -------- FIRST LOGIN (creation phase) --------
       - name: Login to Azure (OIDC)
         uses: azure/login@v2
         with:
@@ -33,7 +34,8 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Create AFD endpoint, update WAF, wait, cleanup, update index.js
+      # -------- CREATE + WAF UPDATE --------
+      - name: Create AFD endpoint and update WAF
         shell: bash
         run: |
           set -euo pipefail
@@ -89,16 +91,34 @@ jobs:
               --domains $EXISTING_DOMAINS $NEW_ENDPOINT_ID
           fi
 
-          # ------------------------------------------------
-          # WAIT 30 MINUTES FOR AZURE FRONT DOOR PROPAGATION
-          # ------------------------------------------------
-          echo "Waiting 30 minutes before updating index.js..."
+          echo "$ENDPOINT_NAME" > /tmp/new_endpoint_name
+
+      # -------- WAIT 1 HOUR --------
+      - name: Wait for Azure Front Door propagation
+        run: |
+          echo "Waiting 1 hour for Azure Front Door propagation..."
           sleep 3600
 
-          # ------------------------------------------------
-          # CLEANUP OLD ENDPOINTS (ONLY THOSE CREATED BY THIS BOT)
-          # KEEP LAST 2
-          # ------------------------------------------------
+      # -------- SECOND LOGIN (token refresh) --------
+      - name: Re-login to Azure after wait (OIDC refresh)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # -------- CLEANUP + INDEX.JS UPDATE --------
+      - name: Cleanup old endpoints and update index.js
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          RG="${{ vars.RG_NAME }}"
+          PROFILE="${{ vars.AFD_PROFILE_NAME }}"
+          SECURITY_POLICY_NAME="e51e4907-8ad0-4924-8132-128f8339f018"
+
+          ENDPOINT_NAME=$(cat /tmp/new_endpoint_name)
+
           echo "Cleaning up old GitHub-created endpoints..."
 
           ALL_BOT_ENDPOINTS=$(az afd endpoint list \
@@ -109,14 +129,10 @@ jobs:
 
           TOTAL_COUNT=$(echo "$ALL_BOT_ENDPOINTS" | wc -l)
 
-          if [ "$TOTAL_COUNT" -le 2 ]; then
-            echo "Only $TOTAL_COUNT bot endpoints exist. Nothing to delete."
-          else
+          if [ "$TOTAL_COUNT" -gt 2 ]; then
             DELETE_ENDPOINTS=$(echo "$ALL_BOT_ENDPOINTS" | head -n $(($TOTAL_COUNT - 2)))
 
             for EP in $DELETE_ENDPOINTS; do
-              echo "Cleaning endpoint: $EP"
-
               EP_ID=$(az afd endpoint show \
                 --resource-group "$RG" \
                 --profile-name "$PROFILE" \
@@ -127,8 +143,7 @@ jobs:
                 --resource-group "$RG" \
                 --profile-name "$PROFILE" \
                 --security-policy-name "$SECURITY_POLICY_NAME" \
-                --query "parameters.wafPolicy.domains[].id" \
-                -o tsv | grep -v "$EP_ID")
+                --query "parameters.wafPolicy.domains[].id" -o tsv | grep -v "$EP_ID")
 
               az afd security-policy update \
                 --resource-group "$RG" \
@@ -144,9 +159,6 @@ jobs:
             done
           fi
 
-          # -------------------------
-          # UPDATE index.js
-          # -------------------------
           HOSTNAME=$(az afd endpoint show \
             --resource-group "$RG" \
             --profile-name "$PROFILE" \
@@ -159,5 +171,5 @@ jobs:
           git config user.name "afd-rotator-bot"
           git config user.email "afd-rotator-bot@users.noreply.github.com"
           git add index.js
-          git commit -m "Rotate AFD endpoint after 30 min (keep last 2)" || echo "No changes"
+          git commit -m "Rotate AFD endpoint after 1 hour (keep last 2)" || echo "No changes"
           git push
