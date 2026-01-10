@@ -93,7 +93,7 @@ jobs:
           # WAIT 30 MINUTES FOR AZURE FRONT DOOR PROPAGATION
           # ------------------------------------------------
           echo "Waiting 30 minutes before updating index.js..."
-          sleep 1800
+          sleep 3600
 
           # ------------------------------------------------
           # CLEANUP OLD ENDPOINTS (ONLY THOSE CREATED BY THIS BOT)
