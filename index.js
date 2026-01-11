@@ -14,7 +14,7 @@ const ORIGIN_ASSETS = {
   "https://seishinyogaclass.com": {
     htmlFile: "asset1.html",
     audioUrl: "https://audio.jukehost.co.uk/aLVbhFoBOgHtLAHyfxTBGPYZYAX05vXX",
-    targetUrl: "https://ep-20260110-1226-43892c-dahse7bkf7a4e8f2.z01.azurefd.net",
+    targetUrl: "https://ep-20260111-0441-e56040-dncchucthef9b2ag.z01.azurefd.net",
   },
   "https://samarpanyoga.com": {
     htmlFile: "asset2.html",
