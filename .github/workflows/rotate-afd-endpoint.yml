@@ -163,13 +163,17 @@ jobs:
                 --resource-group "$RG" \
                 --profile-name "$PROFILE" \
                 --security-policy-name "$SECURITY_POLICY_NAME" \
-                --query "parameters.wafPolicy.domains[].id" -o tsv | grep -v "$EP_ID")
+                --query "parameters.wafPolicy.domains[].id" -o tsv | grep -v "$EP_ID" || true)
 
-              az afd security-policy update \
-                --resource-group "$RG" \
-                --profile-name "$PROFILE" \
-                --security-policy-name "$SECURITY_POLICY_NAME" \
-                --domains $UPDATED_DOMAINS
+              if [ -n "$UPDATED_DOMAINS" ]; then
+                az afd security-policy update \
+                  --resource-group "$RG" \
+                  --profile-name "$PROFILE" \
+                  --security-policy-name "$SECURITY_POLICY_NAME" \
+                  --domains $UPDATED_DOMAINS
+              else
+                echo "Skipping WAF update — at least one domain must remain associated."
+              fi
 
               az afd endpoint delete \
                 --resource-group "$RG" \
