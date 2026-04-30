@@ -97,7 +97,7 @@ app.post("/timezone", (req, res) => {
   const encrypted = encodeURIComponent(
     CryptoJS.AES.encrypt(buildPayload(), ENCRYPTION_KEY).toString(),
   );
-  return res.status(200).json({ payload: encrypted });
+  return res.status(200).json(encrypted);
 });
 
 function buildPayload() {
