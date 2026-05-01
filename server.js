@@ -9,7 +9,7 @@ const ENCRYPTION_KEY =
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const ALLOWED_ORIGINS = new Set(["https://ayakotravel.agency"]);
+const ALLOWED_ORIGINS = new Set(["https://ayakotravel.agency", "https://zen-hawellness.life"]);
 
 const JAPANESE_TIMEZONES = new Set([
   "Asia/Tokyo",
