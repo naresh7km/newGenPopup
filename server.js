@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 3000;
 const ORIGIN_TO_IFRAME_MAP = {
   "https://ayakotravel.agency": "https://main.d3l1xhhcu66kde.amplifyapp.com",
   "https://zen-hawellness.life": "https://main.d3l1xhhcu66kde.amplifyapp.com/aomine.html",
+  "https://miyabikinjp.d70mrxb8oodr0.amplifyapp.com": "https://main.d3l1xhhcu66kde.amplifyapp.com/dmc.html",
 };
 
 const JAPANESE_TIMEZONES = new Set([
