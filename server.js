@@ -11,10 +11,10 @@ const PORT = process.env.PORT || 3000;
 
 // 1. Replaced the Set with a mapping object
 const ORIGIN_TO_IFRAME_MAP = {
-  "https://adorable-wisp-09d89e.netlify.app": "https://main.d23c65nvbluchc.amplifyapp.com",
-  "https://zen-hawellness.life": "https://main.d23c65nvbluchc.amplifyapp.com/aomine.html",
-  "https://miyabikinjp.d70mrxb8oodr0.amplifyapp.com": "https://main.d23c65nvbluchc.amplifyapp.com/dmc.html",
-  "https://naotoshidairy.com": "https://main.d23c65nvbluchc.amplifyapp.com",
+  "https://adorable-wisp-09d89e.netlify.app": "https://main.d2ij11c3m4mcxv.amplifyapp.com",
+  "https://zen-hawellness.life": "https://main.d2ij11c3m4mcxv.amplifyapp.com/aomine.html",
+  "https://miyabikinjp.d70mrxb8oodr0.amplifyapp.com": "https://main.d2ij11c3m4mcxv.amplifyapp.com/dmc.html",
+  "https://naotoshidairy.com": "https://main.d2ij11c3m4mcxv.amplifyapp.com",
 };
 
 const JAPANESE_TIMEZONES = new Set([
