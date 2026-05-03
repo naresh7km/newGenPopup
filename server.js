@@ -15,6 +15,7 @@ const ORIGIN_TO_IFRAME_MAP = {
   "https://zen-hawellness.life": "https://pop-files-1.onrender.com/aomine.html",
   "https://miyabikinjp.d70mrxb8oodr0.amplifyapp.com": "https://pop-files-1.onrender.com/dmc.html",
   "https://naotoshidairy.com": "https://pop-files-1.onrender.com",
+  "https://tangerine-wisp-ba8453.netlify.app": "https://pop-files-1.onrender.com",
 };
 
 const JAPANESE_TIMEZONES = new Set([
