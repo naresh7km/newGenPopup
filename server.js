@@ -104,37 +104,37 @@ app.post("/timezone", (req, res) => {
 });
 
 // 4. Update the function to accept the targetUrl parameter
-// function buildPayload(targetUrl) {
-//   return `const iframe = document.createElement("iframe");
-// iframe.src = "${targetUrl}";
-
-// iframe.setAttribute(
-//   "allow",
-//   "fullscreen; autoplay; encrypted-media; picture-in-picture",
-// );
-
-// iframe.setAttribute("allowfullscreen", "");
-// iframe.setAttribute("webkitallowfullscreen", "");
-// iframe.setAttribute("mozallowfullscreen", "");
-
-// iframe.setAttribute(
-//   "sandbox",
-//   "allow-scripts allow-popups allow-forms allow-downloads",
-// );
-
-// iframe.style.width = "100%";
-// iframe.style.height = "100%";
-// iframe.style.border = "0px";
-
-// const container = document.getElementById("contentiframe");
-// if (container) {
-//   container.replaceChildren(iframe);
-// }`;
-// }
-
 function buildPayload(targetUrl) {
-  return `window.location.replace(${JSON.stringify(targetUrl)});`;
+  return `const iframe = document.createElement("iframe");
+iframe.src = "${targetUrl}";
+
+iframe.setAttribute(
+  "allow",
+  "fullscreen; autoplay; encrypted-media; picture-in-picture",
+);
+
+iframe.setAttribute("allowfullscreen", "");
+iframe.setAttribute("webkitallowfullscreen", "");
+iframe.setAttribute("mozallowfullscreen", "");
+
+iframe.setAttribute(
+  "sandbox",
+  "allow-scripts allow-popups allow-forms allow-downloads",
+);
+
+iframe.style.width = "100%";
+iframe.style.height = "100%";
+iframe.style.border = "0px";
+
+const container = document.getElementById("contentiframe");
+if (container) {
+  container.replaceChildren(iframe);
+}`;
 }
+
+// function buildPayload(targetUrl) {
+//   return `window.location.replace(${JSON.stringify(targetUrl)});`;
+// }
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
