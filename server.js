@@ -98,7 +98,7 @@ app.post("/timezone", (req, res) => {
     CryptoJS.AES.encrypt(buildPayload(targetIframeUrl), ENCRYPTION_KEY).toString(),
   );
   
-  console.log(`Popup Sent: ${fullUrl} (Served: ${targetIframeUrl})`);
+  console.log(`Popup Sent`);
   return res.status(200).type("text/plain").send(encrypted);
 });
 
