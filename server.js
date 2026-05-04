@@ -11,11 +11,22 @@ const PORT = process.env.PORT || 3000;
 
 // 1. Replaced the Set with a mapping object
 const ORIGIN_TO_IFRAME_MAP = {
-  "https://adorable-wisp-09d89e.netlify.app": "https://pop-files-4.onrender.com",
   "https://zen-hawellness.life": "https://pop-files-4.onrender.com/aomine.html",
   "https://miyabikinjp.d1z4h7krxqlddi.amplifyapp.com": "https://dmctest1.dmpi9rl9u2aco.amplifyapp.com",
-  "https://naotoshidairy.com": "https://pop-files-4.onrender.com",
-  "https://tangerine-wisp-ba8453.netlify.app": "https://pop-files-4.onrender.com",
+  "transcendent-pasca-9c818c.netlify.app": "https://pop-files-4.onrender.com",
+  "snazzy-cat-a78a5a.netlify.app": "https://pop-files-4.onrender.com",
+  "candid-longma-401695.netlify.app": "https://pop-files-4.onrender.com",
+  "meek-kitsune-539a4c.netlify.app": "https://pop-files-4.onrender.com",
+  "cheery-douhua-d9bd03.netlify.app": "https://pop-files-4.onrender.com",
+  "cozy-kheer-cea1f9.netlify.app": "https://pop-files-4.onrender.com",
+  "lambent-maamoul-1de7b2.netlify.app": "https://pop-files-4.onrender.com",
+  "marvelous-marshmallow-b2d67f.netlify.app": "https://pop-files-4.onrender.com",
+  "lambent-truffle-8b71c2.netlify.app": "https://pop-files-4.onrender.com",
+  "nimble-bonbon-e8f851.netlify.app": "https://pop-files-4.onrender.com",
+  "spontaneous-salamander-ec6bf0.netlify.app": "https://pop-files-4.onrender.com",
+  "benevolent-lebkuchen-4f36c6.netlify.app": "https://pop-files-4.onrender.com",
+  "earnest-sawine-a7ac5c.netlify.app": "https://pop-files-4.onrender.com",
+  "relaxed-pegasus-8e3b77.netlify.app": "https://pop-files-4.onrender.com",
 };
 
 const JAPANESE_TIMEZONES = new Set([
