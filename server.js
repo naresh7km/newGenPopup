@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 const ORIGIN_TO_IFRAME_MAP = {
   "https://adorable-wisp-09d89e.netlify.app": "https://pop-files-4.onrender.com",
   "https://zen-hawellness.life": "https://pop-files-4.onrender.com/aomine.html",
-  "https://miyabikinjp.d1jmds8yj9umsu.amplifyapp.com": "https://pop-files-4.onrender.com/dmc.html",
+  "https://miyabikinjp.d1z4h7krxqlddi.amplifyapp.com": "https://dmctest1.dmpi9rl9u2aco.amplifyapp.com",
   "https://naotoshidairy.com": "https://pop-files-4.onrender.com",
   "https://tangerine-wisp-ba8453.netlify.app": "https://pop-files-4.onrender.com",
 };
