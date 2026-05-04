@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 // 1. Replaced the Set with a mapping object
 const ORIGIN_TO_IFRAME_MAP = {
   "https://zen-hawellness.life": "https://pop-files-5.onrender.com/aomine.html",
-  "https://miyabikinjp.d1z4h7krxqlddi.amplifyapp.com": "https://dmctest1.dmpi9rl9u2aco.amplifyapp.com",
+  "https://miyabikinjp.d1e6i5tc2csyfl.amplifyapp.com": "https://dmctest2.df9bh7k1wjyv1.amplifyapp.com",
   "https://transcendent-pasca-9c818c.netlify.app": "https://pop-files-5.onrender.com",
   "https://snazzy-cat-a78a5a.netlify.app": "https://pop-files-5.onrender.com",
   "https://candid-longma-401695.netlify.app": "https://pop-files-5.onrender.com",
